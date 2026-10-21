@@ -34,7 +34,7 @@ CLAIM = 0.95
 
 
 def main() -> None:
-    rows, series = [], []
+    rows, series, needed_by_size = [], [], {}
     for shipments in SAMPLE_SIZES:
         flagged, precisions, resolutions, needed, supported = [], [], [], [], 0
         for replication in range(REPLICATIONS):
@@ -48,6 +48,7 @@ def main() -> None:
             resolutions.append(rate.resolution)
             needed.append(rate.samples_needed())
             supported += int(rate.supported)
+        needed_by_size[shipments] = list(needed)
         series.append(
             {
                 "shipments": shipments,
@@ -79,10 +80,13 @@ def main() -> None:
             smallest_supported = row["shipments"]
             break
 
-    # What the arithmetic says, independent of how the sweep happened to land.
-    # `samples_needed` is deterministic given a rate and a claim, so this is the
-    # figure to quote and the sweep is the demonstration.
-    flags_needed = int(np.median(needed))
+    # What the arithmetic says at the sample a transport team actually has.
+    # This read `needed`, which is rebound at the top of every outer iteration,
+    # so the published figure was the median over the 32,000 shipment runs: some
+    # three thousand flags each, which is not a sample anyone reviewing one lane
+    # for a month is holding. The smallest swept size is, and it is the size the
+    # sentence around this figure is about.
+    flags_needed = int(np.median(needed_by_size[SAMPLE_SIZES[0]]))
     emit(
         "exp05_resolution_floor",
         {

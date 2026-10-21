@@ -11,6 +11,7 @@ from tta.attribute import (
     NOT_LATE,
     attribute,
     attribute_log,
+    displacement_residual,
     promise_slack,
     residual,
     stage_lateness,
@@ -255,19 +256,77 @@ def test_the_charges_reconcile_against_the_lateness_for_every_shipment(log, lane
     )
 
 
-def test_the_charges_do_not_sum_past_the_lateness_they_explain(log, lanes, handling):
-    """The double charge, stated as the symptom an audit would look for.
+def test_the_two_upstream_charges_partition_the_departure_displacement(log, lanes, handling):
+    """The half of the identity that can fail.
 
-    Under the version that charged the overrun twice this failed on 88.4% of
-    late deliveries and the charges totalled 1.93 times the lateness. Positive
-    charges may still exceed the lateness when another charge is negative, so
-    this compares the signed sum, which is what the identity constrains.
+    This test used to be a second copy of the identity above, under a name that
+    claimed it compared positive charges against the lateness. It did not, and
+    an audit pointed out that both tests were iterating a constant function: the
+    counterfactual departure and the committed transit cancel between the charges
+    and the slack, so `residual` is zero for every possible input including
+    nonsense ones.
+
+    The displacement is computed here from the timestamps rather than from the
+    charges, so the two upstream terms have to add up to something measured
+    outside themselves. That is the constraint the double charge broke.
     """
     for shipment in log:
+        assert displacement_residual(shipment, lanes[shipment.lane], handling) == 0
+
+
+def test_reintroducing_the_double_charge_breaks_the_displacement_invariant(log, lanes, handling):
+    """The mutation, because an invariant never seen to fail is a comment.
+
+    The defect is reconstructed exactly as `experiments/exp06` reconstructs it:
+    `release_to_depart` charged the whole displacement rather than the part the
+    release overrun did not force. The invariant above must then fail, and it
+    must fail by exactly the overrun, on every shipment whose release overran.
+    """
+
+    def doubled(shipment, lane, handling_seconds):
+        counterfactual = next_departure(shipment.planned_release + handling_seconds, lane)
+        return {
+            "order_to_release": shipment.release_lateness,
+            "release_to_depart": shipment.ship_confirm - counterfactual,
+            "transit": shipment.stage_durations["transit"] - shipment.committed_transit,
+        }
+
+    broken = 0
+    for shipment in log:
         lane = lanes[shipment.lane]
-        charges = stage_lateness(shipment, lane, handling)
-        slack = promise_slack(shipment, lane, handling)
-        assert sum(charges.values()) - slack == shipment.delivery_lateness
+        charges = doubled(shipment, lane, handling)
+        counterfactual = next_departure(shipment.planned_release + handling, lane)
+        displacement = shipment.ship_confirm - counterfactual
+        gap = displacement - (charges["order_to_release"] + charges["release_to_depart"])
+        if shipment.release_lateness != 0:
+            assert gap == -shipment.release_lateness
+            broken += 1
+        # The identity, by contrast, cannot tell the difference on a shipment
+        # whose release did not overrun, because there is nothing to double.
+    assert broken > len(log) // 4, "the mutation barely bit, so this proves little"
+
+
+def test_the_reconciling_identity_is_algebra_and_not_a_measurement(one_lane, handling):
+    """Said out loud, in the suite, because ADR-007 once claimed otherwise.
+
+    `residual` is zero for every input, including inputs that make no sense.
+    Asserting it over a fixture looks like verification and is not, so the
+    property is asserted here as what it is: an algebraic consequence of how the
+    charges are defined, demonstrated on a deliberately absurd shipment rather
+    than on two thousand plausible ones.
+    """
+    absurd = Shipment(
+        shipment_id="SHP-ABSURD",
+        lane=one_lane.name,
+        order_created=0,
+        released=10,
+        ship_confirm=20,
+        delivered=30,
+        promised_delivery=1_000_000,
+        planned_release=5,
+        committed_transit=999,
+    )
+    assert residual(absurd, one_lane, handling) == 0
 
 
 def test_a_release_that_misses_nothing_is_charged_nothing_for_the_departure(one_lane, handling):

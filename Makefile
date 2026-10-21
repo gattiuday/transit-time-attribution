@@ -41,10 +41,28 @@ diagram:
 # not committed, so this target used to fail with a FileNotFoundError traceback
 # on a fresh clone while the help text advertised it as standalone. It runs the
 # suite first if those files are missing.
+# `collect_metrics` writes the generated tables and the test count into the
+# documents, so running this target is enough to repair a corrupted table rather
+# than report it: an audit corrupted four published cells, ran `make verify`, and
+# got a green build because collection had rewritten them before the checker read
+# them. CI catches that with `git diff --exit-code`, which works there because a
+# checkout matches the commit; locally it would fire on any uncommitted edit. So
+# the comparison here is against the state before collection ran, which is the
+# thing actually being asked: did collection have to change anything?
 receipts:
 	@test -f junit.xml -a -f coverage.json || $(MAKE) test
 	$(PY) tools/capture_evidence.py
+	@rm -rf .receipts-before && mkdir -p .receipts-before
+	@for f in docs/metrics.json README.md docs/defense-guide.md; do \
+	  mkdir -p .receipts-before/$$(dirname $$f); cp $$f .receipts-before/$$f; done
+	@cp -r docs/generated .receipts-before/docs/generated
 	$(PY) tools/collect_metrics.py --skip-tests
+	@diff -r -q .receipts-before/docs/generated docs/generated \
+	  && for f in docs/metrics.json README.md docs/defense-guide.md; do \
+	    diff -q .receipts-before/$$f $$f || exit 1; done \
+	  || { echo "collection changed a published artefact: the committed copy was stale"; \
+	       rm -rf .receipts-before; exit 1; }
+	@rm -rf .receipts-before
 	$(PY) tools/check_numbers.py
 
 # The suite runs twice, deliberately. The second run is the mitigation ADR-006
@@ -57,4 +75,4 @@ verify: lint test receipts
 	$(PY) -m pytest tests/ -q
 
 clean:
-	rm -rf .pytest_cache .ruff_cache junit.xml coverage.json .coverage
+	rm -rf .pytest_cache .ruff_cache junit.xml coverage.json .coverage .receipts-before

@@ -29,8 +29,10 @@ from tta.stages import CARRIER_STAGE, STAGES, Shipment
 __all__ = [
     "Attribution",
     "LogAttribution",
+    "admissible_causes",
     "attribute",
     "attribute_log",
+    "displacement_residual",
     "promise_slack",
     "residual",
     "stage_lateness",
@@ -133,6 +135,40 @@ def stage_overruns(shipment: Shipment, lane: Lane, handling_seconds: int) -> dic
     }
 
 
+def admissible_causes(
+    shipment: Shipment,
+    lane: Lane,
+    handling_seconds: int,
+    thresholds: Thresholds = DEFAULTS,
+) -> set[str]:
+    """Every cause that is true of this shipment, which is usually more than one.
+
+    A planted cause is a label, and a label is a choice among the true
+    statements about a shipment. On this generator the choice is close to
+    arbitrary for the two upstream causes: a release that overran by nine hours
+    has also missed a departure, so `warehouse` and `missed_cutoff` are both
+    true of it, and which one was written down depends only on which
+    distribution the overrun was drawn from. An audit measured the overlap at
+    482 of 484 upstream labels on the committed fixture, and the generator's own
+    label verifier passes both, because both are true.
+
+    That makes recovery against a single planted label the wrong question. It
+    measures how often the attribution guessed the same true statement the
+    generator happened to record, which is not a property of the attribution. It
+    is reported anyway, because it is the number every tool in this space
+    publishes, but it is reported beside this one: whether the named cause is
+    true of the shipment at all. ADR-008.
+    """
+    overruns = stage_overruns(shipment, lane, handling_seconds)
+    material = thresholds.min_lateness_seconds
+    causes = {stage for stage, value in overruns.items() if value > material}
+    if promise_slack(shipment, lane, handling_seconds) < 0:
+        causes.add(INFEASIBLE_PLAN)
+    if not shipment.is_late(material):
+        causes.add(NOT_LATE)
+    return causes
+
+
 def promise_slack(shipment: Shipment, lane: Lane, handling_seconds: int) -> int:
     """Seconds the promise holds over the plan, which can be negative.
 
@@ -154,13 +190,44 @@ def promise_slack(shipment: Shipment, lane: Lane, handling_seconds: int) -> int:
 def residual(shipment: Shipment, lane: Lane, handling_seconds: int) -> int:
     """How far the three charges are from explaining the lateness. Always zero.
 
-    Kept as a function rather than a comment because a decomposition that does
-    not reconcile is the defect this module shipped once already, and the only
-    way to know it reconciles is to subtract.
+    Always zero for every possible input, and that is the point to be honest
+    about. The counterfactual departure and the committed transit appear in the
+    charges and again in the slack with opposite signs, so they cancel: substitute
+    random integers for both and the identity still closes. An audit did exactly
+    that and was right to call the earlier framing of this function a tautology
+    dressed as a check. ADR-007 claimed it was verified "for every shipment in the
+    fixture rather than for an example", and iterating a constant function two
+    thousand times verifies nothing.
+
+    What the identity actually buys is narrower and still worth having. Of the
+    terms in it, one pairing does not cancel: `order_to_release` and
+    `release_to_depart` must sum to the departure displacement. That is the
+    constraint the double charge violated, and `displacement_residual` below is
+    the half of this that can fail.
     """
     charges = stage_lateness(shipment, lane, handling_seconds)
     slack = promise_slack(shipment, lane, handling_seconds)
     return shipment.delivery_lateness - (sum(charges.values()) - slack)
+
+
+def displacement_residual(shipment: Shipment, lane: Lane, handling_seconds: int) -> int:
+    """How far the two upstream charges are from the departure displacement.
+
+    Unlike `residual` this can be non-zero. The displacement is computed here
+    from the timestamps rather than from the charges, so a change to either
+    upstream charge that does not preserve their sum shows up: under the double
+    charge the two summed to the displacement plus the release overrun, and this
+    returned that overrun on every shipment that missed a departure.
+
+    This is the invariant to assert, and `tests/test_attribute.py` asserts it by
+    reintroducing the defect and checking the assertion goes red, because an
+    invariant that has never been seen to fail is indistinguishable from a
+    comment.
+    """
+    charges = stage_lateness(shipment, lane, handling_seconds)
+    counterfactual = next_departure(shipment.planned_release + handling_seconds, lane)
+    displacement = shipment.ship_confirm - counterfactual
+    return displacement - (charges["order_to_release"] + charges["release_to_depart"])
 
 
 @dataclass(frozen=True)
@@ -174,6 +241,7 @@ class Attribution:
     cause: str
     convention: str
     stage_lateness: dict[str, int]
+    stage_overruns: dict[str, int]
     shares: dict[str, float]
     carrier_looks_late: bool
 
@@ -207,7 +275,13 @@ def attribute(
     shipment.validate()
     raw = stage_lateness(shipment, lane, handling_seconds)
     overruns = stage_overruns(shipment, lane, handling_seconds)
-    total_overrun = sum(overruns.values())
+    # One threshold, used everywhere a stage counts as over plan. Cause
+    # selection used `> 0` while the multiple cause count used this, so a stage
+    # thirty seconds over plan could be named as the cause of a late delivery
+    # and not counted as a second cause of it. The two happened to agree on this
+    # fixture, which is why nothing surfaced it.
+    material = thresholds.min_lateness_seconds
+    total_overrun = sum(value for value in overruns.values() if value > material)
 
     if not shipment.is_late(thresholds.min_lateness_seconds):
         cause = NOT_LATE
@@ -239,7 +313,7 @@ def attribute(
             "cannot happen. Refusing to name a cause rather than inventing one"
         )
     elif convention == "first_cause":
-        cause = next(stage for stage in STAGES if overruns[stage] > 0)
+        cause = next(stage for stage in STAGES if overruns[stage] > material)
         shares = {cause: 1.0}
     elif convention == "largest_cause":
         cause = max(STAGES, key=lambda stage: overruns[stage])
@@ -256,6 +330,7 @@ def attribute(
         cause=cause,
         convention=convention,
         stage_lateness=raw,
+        stage_overruns=overruns,
         shares=shares,
         carrier_looks_late=shipment.carrier_looks_late(thresholds.min_lateness_seconds),
     )
@@ -398,12 +473,20 @@ def attribute_log(
                 1 for row in flagged if row.is_late and row.cause == CARRIER_STAGE
             ),
             late_but_carrier_looks_fine=sum(1 for row in late if not row.carrier_looks_late),
+            # Over `stage_overruns`, not `stage_lateness`. This counted
+            # positive entries in the signed decomposition, which is the object
+            # `stage_overruns` exists to replace for exactly this purpose: a
+            # release four hours early produces a positive departure charge that
+            # is the credit being spent, so a pure carrier failure was counted as
+            # having more than one stage over plan because the release was nine
+            # minutes early. The published share was 87.4% and the quantity it
+            # claimed to measure is 61.8%.
             late_with_multiple_causes=sum(
                 1
                 for row in late
                 if sum(
                     1
-                    for value in row.stage_lateness.values()
+                    for value in row.stage_overruns.values()
                     if value > thresholds.min_lateness_seconds
                 )
                 > 1

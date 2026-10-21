@@ -1,9 +1,11 @@
 {
   "best_convention": "largest_cause",
   "best_recovery_mean": 0.8843353706673249,
-  "note": "no convention clears four fifths, and the two single cause ones fail on opposite groups. That is not a defect in the arithmetic: a release that overran by hours has also missed the day's last departure, both stages are over plan, and no rule makes one of them the cause",
+  "note": "recovery against the planted label and admissibility of the named cause are two different measurements and only the second is about the attribution. A release that overran by hours has also missed the day's last departure, so warehouse and missed_cutoff are both true of it and which was recorded depends on which distribution the overrun was drawn from. Every convention names a cause that is true of the shipment on every late delivery; they differ only in which of the true causes they name, and recovery measures agreement with the generator's arbitrary choice rather than correctness",
   "per_convention": {
     "first_cause": {
+      "admissible_mean": 1.0,
+      "admissible_sd": 0.0,
       "confusion": {
         "carrier->transit": 4334,
         "infeasible_plan->infeasible_plan": 1405,
@@ -12,9 +14,12 @@
       },
       "recovery_mean": 0.6966824867071434,
       "recovery_sd": 0.01342800088016662,
-      "replications": 12
+      "replications": 12,
+      "upstream_label_overlap_mean": 0.9618218419255352
     },
     "largest_cause": {
+      "admissible_mean": 1.0,
+      "admissible_sd": 0.0,
       "confusion": {
         "carrier->transit": 4334,
         "infeasible_plan->infeasible_plan": 1405,
@@ -25,9 +30,12 @@
       },
       "recovery_mean": 0.8843353706673249,
       "recovery_sd": 0.00766059503968579,
-      "replications": 12
+      "replications": 12,
+      "upstream_label_overlap_mean": 0.9618218419255352
     },
     "proportional": {
+      "admissible_mean": 1.0,
+      "admissible_sd": 0.0,
       "confusion": {
         "carrier->transit": 4334,
         "infeasible_plan->infeasible_plan": 1405,
@@ -38,7 +46,8 @@
       },
       "recovery_mean": 0.8843353706673249,
       "recovery_sd": 0.00766059503968579,
-      "replications": 12
+      "replications": 12,
+      "upstream_label_overlap_mean": 0.9618218419255352
     }
   },
   "question": "does the attribution recover the planted cause",

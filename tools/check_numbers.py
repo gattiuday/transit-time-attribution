@@ -101,6 +101,7 @@ ALLOWED_BARE_NUMBERS = {
     "005",
     "006",
     "007",
+    "008",
 }
 
 
@@ -419,13 +420,13 @@ def block_check(payload: dict) -> list[str]:
     return failures
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--summary", type=Path, default=None, help="also write a markdown summary")
     parser.add_argument(
         "--metrics", type=Path, default=METRICS_PATH, help="metrics file to check against"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.metrics.exists():
         print(f"{args.metrics} is missing; run tools/collect_metrics.py first", file=sys.stderr)

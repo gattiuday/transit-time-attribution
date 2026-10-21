@@ -25,7 +25,7 @@ Properties of the arithmetic and of the lifecycle, identical against real data:
   Every lane in the fixture is generated with the same mix of planted causes, so the
   carriers are equally good by construction, and the three departure lane still shows
   26.6% on the three departure lane against 36.8% late on the others. The mechanism transfers; the sizes do not.
-- **No single cause convention recovers every planted cause**, because 87.4% of late
+- **No single cause convention recovers every planted cause**, because 61.8% of late
   deliveries have more than one stage over plan. Structural.
 - **A coarser clock loses the attribution silently.** It reports fewer late shipments
   rather than an error.

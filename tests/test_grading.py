@@ -15,7 +15,7 @@ from collections import Counter
 import pytest
 from conftest import EXPECTED_CAUSE
 
-from tta.attribute import attribute_log
+from tta.attribute import admissible_causes, attribute_log
 from tta.config import LANES, next_departure
 from tta.errors import AttributionError
 from tta.generator import (
@@ -413,3 +413,82 @@ def test_a_shipment_labelled_on_plan_that_arrives_late_is_a_false_label(one_lane
     )
     assert label_is_true(shipment, "none") == "delivered late"
     assert label_is_true(shipment, "infeasible_plan") is None
+
+
+# --------------------------------------------------------------------------
+# Admissibility: whether the named cause is true of the shipment at all.
+#
+# Recovery against a planted label measures agreement with a choice the
+# generator made between simultaneously true statements. On the committed
+# fixture 482 of 484 shipments labelled `warehouse` or `missed_cutoff` satisfy
+# both label predicates, and `label_is_true` passes both, because both are
+# true. ADR-008.
+# --------------------------------------------------------------------------
+
+
+def test_the_attribution_never_names_a_stage_that_did_not_overrun(log, lanes):
+    """The property that is about the attribution rather than about the label.
+
+    Under every convention, on every late delivery. If this ever fails the tool
+    is inventing a cause, which is a different and much worse failure than
+    naming the other true one.
+    """
+    for convention in ("first_cause", "largest_cause", "proportional"):
+        _, rows = attribute_log(log, lanes, DEPART_FLOOR_SECONDS, convention)
+        for shipment, row in zip(log, rows, strict=True):
+            if not row.is_late:
+                continue
+            allowed = admissible_causes(shipment, lanes[shipment.lane], DEPART_FLOOR_SECONDS)
+            assert row.cause in allowed, (
+                f"{convention} named {row.cause} on {shipment.shipment_id}, which is true of "
+                f"nothing that happened to it; admissible were {sorted(allowed)}"
+            )
+
+
+def test_the_two_upstream_labels_are_usually_both_true_of_the_same_shipment(log, truth, lanes):
+    """The measurement that makes the recovery rate uninterpretable on its own.
+
+    If this were small, recovery against the planted label would be close to a
+    statement about the attribution. It is not small.
+    """
+    upstream = [
+        shipment
+        for shipment, cause in zip(log, truth, strict=True)
+        if cause in ("warehouse", "missed_cutoff")
+    ]
+    assert upstream
+    both = [
+        shipment
+        for shipment in upstream
+        if {"order_to_release", "release_to_depart"}
+        <= admissible_causes(shipment, lanes[shipment.lane], DEPART_FLOOR_SECONDS)
+    ]
+    assert len(both) / len(upstream) > 0.9, (
+        "the two upstream labels have stopped overlapping, which would make the recovery "
+        "rate meaningful again and this repository's account of it wrong"
+    )
+
+
+def test_a_shipment_on_plan_is_admissible_only_as_not_late(one_lane, handling):
+    """The boundary cases of admissibility, which the fixture does not exercise."""
+    planned = 6 * 3600
+    depart = next_departure(planned + handling, one_lane)
+    committed = one_lane.committed_transit_days * 86_400
+    on_plan = Shipment(
+        shipment_id="SHP-CLEAN",
+        lane=one_lane.name,
+        order_created=0,
+        released=planned,
+        ship_confirm=depart,
+        delivered=depart + committed,
+        promised_delivery=depart + committed + 3600,
+        planned_release=planned,
+        committed_transit=committed,
+    )
+    assert admissible_causes(on_plan, one_lane, handling) == {"not_late"}
+
+    infeasible = dataclasses.replace(on_plan, promised_delivery=depart + committed - 2 * 3600)
+    assert admissible_causes(infeasible, one_lane, handling) == {"infeasible_plan"}
+
+    carrier = dataclasses.replace(on_plan, delivered=on_plan.delivered + 2 * 86_400)
+    assert admissible_causes(carrier, one_lane, handling) == {"transit"}

@@ -7,7 +7,7 @@ import pytest
 from tta.attribute import attribute_log
 from tta.config import GRANULARITIES
 from tta.errors import AttributionError
-from tta.resolution import coarsen, rate_with_floor
+from tta.resolution import coarsen, rate_with_floor, separates, wilson_interval
 
 
 @pytest.mark.parametrize("granularity", sorted(GRANULARITIES))
@@ -164,3 +164,46 @@ def test_a_numerator_above_its_denominator_is_refused():
 def test_negative_counts_are_refused():
     with pytest.raises(AttributionError, match="negative counts"):
         rate_with_floor(-1, 10, 0.95)
+
+
+def test_the_wilson_interval_is_not_centred_on_the_measured_rate():
+    """The defect that made `supported` test a different interval.
+
+    Wilson is symmetric about (p + z^2/2n)/(1 + z^2/n). At zero successes over
+    forty trials the interval reaches 8.76% while the rate plus a half width
+    reaches 4.38%, so a claim of 6% was reported as separable when it is inside
+    the interval the sample supports.
+    """
+    rate = rate_with_floor(0, 40, 0.06)
+    lower, upper = rate.interval
+    assert lower == pytest.approx(0.0, abs=1e-9)
+    assert upper == pytest.approx(0.0876, abs=5e-4)
+    assert not rate.supported
+    assert rate_with_floor(0, 40, 0.10).supported
+
+
+def test_the_interval_and_the_half_width_disagree_about_the_bound():
+    """Kept explicit, because the two were used interchangeably."""
+    rate = rate_with_floor(0, 40, 0.0)
+    _, upper = rate.interval
+    assert upper > rate.rate + rate.sampling_half_width
+
+
+def test_the_sample_needed_is_a_threshold_and_not_the_first_lucky_size():
+    """Monotonicity, over the repository's own measured precision.
+
+    `samples_needed` rounded the numerator back to an integer at each candidate
+    size, which moved the effective rate by up to half an observation. An audit
+    found seventeen sizes above the returned answer that did not separate the
+    claim, at the precision this repository publishes.
+    """
+    rate = rate_with_floor(292, 316, 0.95)
+    needed = rate.samples_needed()
+    assert not separates(rate.rate, needed - 1, 0.95)
+    for size in range(needed, needed + 500):
+        assert separates(rate.rate, size, 0.95), f"a sample of {size} stopped separating"
+
+
+def test_an_interval_over_no_observations_is_undefined():
+    with pytest.raises(AttributionError, match="undefined"):
+        wilson_interval(0.5, 0)

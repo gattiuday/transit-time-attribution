@@ -18,7 +18,7 @@ from __future__ import annotations
 import numpy as np
 from _harness import EXPECTED_CAUSE, REPLICATIONS, SHIPMENTS, emit
 
-from tta.attribute import attribute, promise_slack, stage_lateness
+from tta.attribute import attribute, displacement_residual
 from tta.config import next_departure
 from tta.generator import DEPART_FLOOR_SECONDS, generate_log, lanes_by_name
 from tta.stages import STAGES
@@ -84,19 +84,21 @@ def main() -> None:
                 warehouse_old += old_cause == expected
                 warehouse_new += current.cause == expected
 
+        for shipment in log:
+            assert (
+                displacement_residual(shipment, lanes[shipment.lane], DEPART_FLOOR_SECONDS) == 0
+            ), shipment.shipment_id
         over_attributed.append(exceeded / late)
         ratios.append(charged / actual)
         old_recovery.append(old_correct / late)
         new_recovery.append(new_correct / late)
 
-    # The identity the fix rests on, asserted over the same logs rather than
-    # reported, because a decomposition that reconciles on average reconciles
-    # nowhere in particular.
-    for shipment in log:
-        lane = lanes[shipment.lane]
-        charges = stage_lateness(shipment, lane, DEPART_FLOOR_SECONDS)
-        slack = promise_slack(shipment, lane, DEPART_FLOOR_SECONDS)
-        assert sum(charges.values()) - slack == shipment.delivery_lateness, shipment.shipment_id
+    # The invariant the fix rests on, checked inside the replication loop above
+    # rather than here. This block ran after the loop and so saw only the last
+    # log, while its own comment said "over the same logs", and it asserted the
+    # reconciling identity, which an audit showed is zero for every possible
+    # input and therefore asserts nothing. `displacement_residual` is the part
+    # that can fail and it is asserted per replication.
 
     rows = [
         ("late deliveries charged past their lateness", over_attributed),

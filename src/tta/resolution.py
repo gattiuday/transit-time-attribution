@@ -65,6 +65,38 @@ def coarsen(shipment: Shipment, granularity: str, mode: str = "floor") -> Shipme
     )
 
 
+#: The 97.5th percentile of the standard normal, for a two sided interval at the
+#: conventional ninety five per cent.
+Z_975 = 1.959963984540054
+
+
+def wilson_interval(rate: float, size: int) -> tuple[float, float]:
+    """The Wilson score interval for a rate observed over `size` trials.
+
+    Takes the rate as a float rather than a count so that it can be asked of a
+    hypothetical sample size without rounding the numerator back to an integer.
+    `samples_needed` used to do exactly that, and `round(rate * size)` moved the
+    effective rate by up to half an observation, which made the search
+    non-monotone: an audit found seventeen sizes above the returned answer that
+    did not separate the claim. At a fixed rate the width shrinks monotonically
+    in the size, so searching without the rounding returns a threshold rather
+    than the first lucky size.
+    """
+    if size <= 0:
+        raise AttributionError("a sampling interval over zero observations is undefined")
+    z = Z_975
+    denominator = 1 + z**2 / size
+    centre = (rate + z**2 / (2 * size)) / denominator
+    spread = z * math.sqrt(rate * (1 - rate) / size + z**2 / (4 * size**2)) / denominator
+    return (centre - spread, centre + spread)
+
+
+def separates(rate: float, size: int, claim: float) -> bool:
+    """Whether a sample of `size` at `rate` puts `claim` outside what it supports."""
+    lower, upper = wilson_interval(rate, size)
+    return not (lower <= claim <= upper) and abs(rate - claim) > 1.0 / size
+
+
 @dataclass(frozen=True)
 class RateWithFloor:
     """A measured rate, its resolution floor, and what it would take to support it."""
@@ -115,14 +147,24 @@ class RateWithFloor:
         sample. Wilson keeps a finite interval at the boundary, which is the
         whole reason to prefer it here.
         """
-        if self.denominator == 0:
-            raise AttributionError("a sampling interval over zero observations is undefined")
-        z = 1.959963984540054  # the 97.5th percentile of the standard normal
-        n = self.denominator
-        rate = self.rate
-        denominator = 1 + z**2 / n
-        spread = z * math.sqrt(rate * (1 - rate) / n + z**2 / (4 * n**2)) / denominator
-        return spread
+        lower, upper = wilson_interval(self.rate, self.denominator)
+        return (upper - lower) / 2
+
+    @property
+    def interval(self) -> tuple[float, float]:
+        """The Wilson score interval itself, which is not centred on the rate.
+
+        Wilson is symmetric about (p + z^2/2n) / (1 + z^2/n), not about p, and
+        the difference is largest exactly where this repository reports rates:
+        near one, and at zero. `supported` compared the claim against p plus or
+        minus the half width, which is a different interval from this one. An
+        audit found 528 combinations of sample size, successes and claim where
+        that comparison called a claim distinguishable while the claim sat
+        inside the real interval. At no misattributions over forty flags it put
+        the bound at 4.4% when the interval reaches 8.8%, which is the case the
+        module docstring above advertises.
+        """
+        return wilson_interval(self.rate, self.denominator)
 
     @property
     def resolution(self) -> float:
@@ -139,12 +181,12 @@ class RateWithFloor:
     def supported(self) -> bool:
         """Whether the sample can tell the measured rate from the claimed one.
 
-        A rate measured at the top of its range and claimed five points below
-        it is supported only if the sample is large enough that a shortfall that
-        size would have shown up, which means clearing the sampling interval and
-        not merely the granularity floor.
+        The claim is supported when it lies outside the interval the sample
+        actually supports, and that interval is `interval`, not the rate plus or
+        minus a half width. It must also clear the granularity floor, because a
+        difference a rate cannot express is not a difference this sample saw.
         """
-        return abs(self.rate - self.claim) > self.resolution
+        return separates(self.rate, self.denominator, self.claim)
 
     def samples_needed(self) -> int:
         """How many observations the claim would need to be distinguishable.
@@ -174,9 +216,9 @@ class RateWithFloor:
         # the answer unfalsifiable.
         size = 1
         while size < self.MAX_SAMPLE:
-            # The same measured rate, asked of a larger sample.
-            scaled = RateWithFloor(round(self.rate * size), size, self.claim)
-            if abs(scaled.rate - self.claim) > scaled.resolution:
+            # The same measured rate, asked of a larger sample, without rounding
+            # the numerator back to an integer. See `wilson_interval`.
+            if separates(self.rate, size, self.claim):
                 return size
             size += 1
         raise AttributionError(

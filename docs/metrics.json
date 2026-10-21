@@ -1,10 +1,20 @@
 {
   "anchors": {
+    "admissible_pct": [
+      "cause that is true\nof the shipment on {}% of",
+      "every convention scores {}% on every late delivery",
+      "true cause on **{}% of** late deliveries"
+    ],
     "best_recovery_pct": [
       "recovers {}%",
       "moved the\nrecovery to {}%",
       "largest_cause | {}% | warehouse overruns the timetable",
       "from 68.6% to {}%",
+      "figure for that, {}% at best",
+      "second version cited {}% and called it recovery",
+      "figure **recovers {}%**",
+      "Then it showed {}% and called that recovery",
+      "treat {}% as what it is",
       "proportional | {}% | the same as largest_cause"
     ],
     "carrier_rate_spread_points": [
@@ -142,6 +152,7 @@
       "At {} shipments the"
     ],
     "smallest_supporting_sample": [
+      "it takes\n  {} shipments before it holds",
       "means {} shipments before it holds",
       "which is {} shipments on one lane",
       "roughly 2000 shipments to {}"
@@ -151,6 +162,11 @@
     ],
     "tests_total": [
       "{} tests"
+    ],
+    "upstream_label_overlap_pct": [
+      "Both labels are true of {}%",
+      "both labels are true of {}% of",
+      "measured as {}% across twelve independent logs"
     ],
     "upstream_share_pct": [
       "{}% of late deliveries",
@@ -171,7 +187,8 @@
     ],
     "worst_recovery_pct": [
       "down to {}%",
-      "first_cause | {}% | missed cutoffs,"
+      "first_cause | {}% | missed cutoffs,",
+      "at best and {}% at worst"
     ]
   },
   "badge_only": [
@@ -187,6 +204,7 @@
     "docs/adr/ADR-005-what-a-generated-event-log-cannot-establish.md",
     "docs/adr/ADR-006-the-receipts-suite-is-the-one-failure-that-cannot-block-collection.md",
     "docs/adr/ADR-007-charge-the-departure-net-of-the-overrun-that-forced-it.md",
+    "docs/adr/ADR-008-grade-admissibility-beside-recovery.md",
     "src/tta/__init__.py",
     "src/tta/attribute.py",
     "src/tta/cli.py",
@@ -204,11 +222,12 @@
     "experiments/exp06_double_charge.py"
   ],
   "formats": {
+    "admissible_pct": "{:.1f}",
     "best_recovery_pct": "{:.1f}",
     "carrier_rate_spread_points": "{:.1f}",
     "carrier_rate_standard_error_points": "{:.1f}",
     "convention_spread_points": "{:.1f}",
-    "coverage_line_pct": "{:.0f}",
+    "coverage_line_pct": "{:.2f}",
     "daily_clock_late_loss_pct": "{:.0f}",
     "daily_clock_mode_swing_pct": "{:.0f}",
     "daily_floor_late": "{:.0f}",
@@ -239,6 +258,7 @@
     "single_departure_late_pct": "{:.1f}",
     "single_lane_best_late_pct": "{:.1f}",
     "stage_share_pct": "{:.1f}",
+    "upstream_label_overlap_pct": "{:.1f}",
     "upstream_share_pct": "{:.1f}",
     "upstream_share_sd": "{:.2f}",
     "warehouse_planted": "{:d}",
@@ -246,11 +266,12 @@
     "worst_recovery_pct": "{:.1f}"
   },
   "formatted": {
+    "admissible_pct": "100.0",
     "best_recovery_pct": "88.4",
     "carrier_rate_spread_points": "0.2",
     "carrier_rate_standard_error_points": "0.3",
     "convention_spread_points": "0.0",
-    "coverage_line_pct": "100",
+    "coverage_line_pct": "100.00",
     "daily_clock_late_loss_pct": "52",
     "daily_clock_mode_swing_pct": "51",
     "daily_floor_late": "642",
@@ -261,14 +282,14 @@
     "fixture_infeasible_share_pct": "11.2",
     "fixture_shipments": "2000",
     "flagged_at_small_sample": "21",
-    "flags_needed_to_separate_the_claim": "316",
+    "flags_needed_to_separate_the_claim": "138",
     "hourly_clock_shift_points": "0.03",
     "infeasible_share_pct": "8.8",
     "late_rate_spread_points": "10.5",
     "late_rate_standard_error_points": "0.4",
     "multi_departure_carrier_share_pct": "34.3",
     "multi_departure_late_pct": "26.6",
-    "multiple_cause_share_pct": "87.4",
+    "multiple_cause_share_pct": "61.8",
     "over_attributed_pct": "91.2",
     "over_attribution_ratio": "2.05",
     "python_min_version": "3.11",
@@ -284,7 +305,8 @@
     "small_sample_shipments": "250",
     "smallest_supporting_sample": "8000",
     "stage_share_pct": "64.2",
-    "tests_total": "221",
+    "tests_total": "233",
+    "upstream_label_overlap_pct": "96.2",
     "upstream_share_pct": "73.0",
     "upstream_share_sd": "0.98",
     "warehouse_planted": "5428",
@@ -300,11 +322,12 @@
     ]
   },
   "metrics": {
+    "admissible_pct": 100.0,
     "best_recovery_pct": 88.4335370667325,
     "carrier_rate_spread_points": 0.16301864071714967,
     "carrier_rate_standard_error_points": 0.2597324224935769,
     "convention_spread_points": 0.0,
-    "coverage_line_pct": 99.80276134122288,
+    "coverage_line_pct": 100.0,
     "daily_clock_late_loss_pct": 51.96531070626405,
     "daily_clock_mode_swing_pct": 51.253409533705664,
     "daily_floor_late": 641.5833333333334,
@@ -315,20 +338,20 @@
     "fixture_infeasible_share_pct": 11.161387631975868,
     "fixture_shipments": 2000,
     "flagged_at_small_sample": 20.75,
-    "flags_needed_to_separate_the_claim": 316,
+    "flags_needed_to_separate_the_claim": 138,
     "hourly_clock_shift_points": 0.02740071777661557,
     "infeasible_share_pct": 8.762007053965561,
     "late_rate_spread_points": 10.483870967741932,
     "late_rate_standard_error_points": 0.35252989910245014,
     "multi_departure_carrier_share_pct": 34.3068387623842,
     "multi_departure_late_pct": 26.644161040260073,
-    "multiple_cause_share_pct": 87.39153793393073,
+    "multiple_cause_share_pct": 61.7537191973883,
     "over_attributed_pct": 91.23799294603442,
     "over_attribution_ratio": 2.0543983699824557,
     "python_min_version": 3.11,
     "recovery_under_double_charge_pct": 68.56547711681432,
     "resolution_floor_small_pct": 5.092897655040104,
-    "resolution_small_pct": 12.504906176974268,
+    "resolution_small_pct": 12.504906176974265,
     "scorecard_precision_pct": 92.58148678818304,
     "scorecard_precision_sd": 1.5346451114740578,
     "scorecard_recall_pct": 27.033458716524684,
@@ -338,7 +361,8 @@
     "small_sample_shipments": 250,
     "smallest_supporting_sample": 8000,
     "stage_share_pct": 64.20453422950973,
-    "tests_total": 221,
+    "tests_total": 233,
+    "upstream_label_overlap_pct": 96.18218419255352,
     "upstream_share_pct": 72.96654128347532,
     "upstream_share_sd": 0.9767923671307281,
     "warehouse_planted": 5428,

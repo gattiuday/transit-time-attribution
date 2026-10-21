@@ -93,11 +93,27 @@ ANCHORS: dict[str, list[str]] = {
         "moved the\nrecovery to {}%",
         "largest_cause | {}% | warehouse overruns the timetable",
         "from 68.6% to {}%",
+        "figure for that, {}% at best",
+        "second version cited {}% and called it recovery",
+        "figure **recovers {}%**",
+        "Then it showed {}% and called that recovery",
+        "treat {}% as what it is",
         "proportional | {}% | the same as largest_cause",
+    ],
+    "admissible_pct": [
+        "cause that is true\nof the shipment on {}% of",
+        "every convention scores {}% on every late delivery",
+        "true cause on **{}% of** late deliveries",
+    ],
+    "upstream_label_overlap_pct": [
+        "Both labels are true of {}%",
+        "both labels are true of {}% of",
+        "measured as {}% across twelve independent logs",
     ],
     "worst_recovery_pct": [
         "down to {}%",
         "first_cause | {}% | missed cutoffs,",
+        "at best and {}% at worst",
     ],
     "single_departure_late_pct": ["{}% late on"],
     "multi_departure_late_pct": [
@@ -125,6 +141,7 @@ ANCHORS: dict[str, list[str]] = {
         "at {} flags it put the",
     ],
     "smallest_supporting_sample": [
+        "it takes\n  {} shipments before it holds",
         "means {} shipments before it holds",
         "which is {} shipments on one lane",
         "roughly 2000 shipments to {}",
@@ -151,7 +168,11 @@ ANCHORS: dict[str, list[str]] = {
 }
 
 FORMATS: dict[str, str] = {
-    "coverage_line_pct": "{:.0f}",
+    # Two decimals, not zero. At "{:.0f}" a measured 99.80% formatted as "100"
+    # and the badge check compared the badge string against the formatted value,
+    # so it compared "100" with "100" and passed. The formatting layer laundered
+    # a false claim past the one gate built to catch it.
+    "coverage_line_pct": "{:.2f}",
     "upstream_share_pct": "{:.1f}",
     "upstream_share_sd": "{:.2f}",
     "scorecard_precision_pct": "{:.1f}",
@@ -171,6 +192,8 @@ FORMATS: dict[str, str] = {
     "late_rate_standard_error_points": "{:.1f}",
     "best_recovery_pct": "{:.1f}",
     "worst_recovery_pct": "{:.1f}",
+    "admissible_pct": "{:.1f}",
+    "upstream_label_overlap_pct": "{:.1f}",
     "single_departure_late_pct": "{:.1f}",
     "multi_departure_late_pct": "{:.1f}",
     "single_departure_carrier_share_pct": "{:.1f}",
@@ -419,6 +442,12 @@ def derive() -> dict[str, float]:
             * 100,
             "convention_spread_points": blind["upstream_share_convention_spread"] * 100,
             "best_recovery_pct": recovery["best_recovery_mean"] * 100,
+            "admissible_pct": (
+                recovery["per_convention"]["largest_cause"]["admissible_mean"] * 100
+            ),
+            "upstream_label_overlap_pct": (
+                recovery["per_convention"]["largest_cause"]["upstream_label_overlap_mean"] * 100
+            ),
             "worst_recovery_pct": recovery["worst_recovery_mean"] * 100,
             "single_departure_late_pct": cutoff["single_departure_late_rate"] * 100,
             "multi_departure_late_pct": cutoff["multi_departure_late_rate"] * 100,

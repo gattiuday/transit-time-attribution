@@ -10,7 +10,7 @@ asking a question the data cannot answer, because the second is a consequence of
 and the first is not sufficient on its own: a six hour overrun on a lane with a later
 cutoff would have cost nothing.
 
-On this repository's fixture, 87.4% of late deliveries have more than one stage over plan.
+On this repository's fixture, 61.8% of late deliveries have more than one stage over plan.
 That is not an artefact of the generator. It is what a step function downstream of a
 continuous overrun produces.
 

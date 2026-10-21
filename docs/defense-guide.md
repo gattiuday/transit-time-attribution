@@ -52,18 +52,24 @@ against a mislabelled fixture grades the generator, not the tool.
 
 ### 3. "What is the weakest part of this repository?"
 
-That the attribution cannot name a single cause reliably, and no version of it will.
+That the question it answers about which upstream team to talk to has more than one correct
+answer, and for two rounds this repository published the wrong account of why.
 
-The best convention recovers 88.4% of planted causes and the worst is down to 69.7%. The
-reason is structural: 87.4% of late deliveries have more than one stage over plan, because
-a release that overran by six hours has also missed the day's last departure. Both stages
-are over plan. Both statements are true. `first_cause` recovers every warehouse overrun
-and blames missed cutoffs on the warehouse too; `largest_cause` recovers every missed
-cutoff and blames warehouse overruns on the departure wait, because a missed departure is
-mechanically larger than the overrun that caused it.
+61.8% of late deliveries have more than one stage over plan, because a release that overran
+by six hours has also missed the day's last departure. Both stages are over plan and both
+statements are true, so a tool that names one is naming a convention. The first version of
+this document called that a ceiling on attribution and cited a recovery rate in the sixties
+as evidence; the rate was depressed by an arithmetic defect, which ADR-007 records. The
+second version cited 88.4% and called it recovery of the planted cause; both labels are
+true of 96.2% of the shipments carrying either, so that figure measures agreement with an
+arbitrary choice, which ADR-008 records.
 
-So if someone wants a report naming one upstream team as the cause, this
-tool will give them one and it will be wrong about a third of the rows.
+What is true and measured is narrower. Every convention names a cause that is true of the
+shipment on 100.0% of late deliveries, so the tool never invents one. Which true cause it
+names is a convention and the convention is reported beside every number. If someone wants
+a report naming one upstream team, this tool will give them one, and the honest caveat is
+not that it is often wrong but that there is frequently no single right answer to be wrong
+about.
 
 What makes that tolerable rather than disqualifying is that the headline does not depend
 on it. Both upstream stages lie outside the scorecard's window, so which one a convention
@@ -144,8 +150,11 @@ deliveries here and the tool currently says only that the plan was the problem.
   its window.
 - The scorecard is right **92.6% of the time** about what it flags and **sees 27.0%** of
   the late deliveries. Precise and blind is the harder failure to notice.
-- **87.4% of late deliveries have** more than one stage over plan, which is why the best
-  convention only **recovers 88.4%** of planted causes and the worst is **down to 69.7%**.
+- **61.8% of late deliveries have** more than one stage over plan, and
+  **every convention scores 100.0% on every late delivery** for naming a cause that is
+  true of it; the usual recovery figure **recovers 88.4%**
+  at best and is **down to 69.7%** at worst, and **both labels are true of 96.2% of** the
+  shipments that carry either, so that figure is about the label.
 - A single departure lane runs **36.8% late on** delivered service against **26.6% on the three**
   departure lane, with identical carriers, and the carrier's share of lateness
   **runs 24.4% on the single departure** lanes against **34.3% on the lane with three**.
@@ -153,8 +162,8 @@ deliveries here and the tool currently says only that the plan was the problem.
   the count by 51%**. An hourly clock **shifts it by 0.03 points**.
 - At 250 shipments the scorecard **flags 21 shipments**, a **granularity floor of 5.09%**,
   and a sampling interval that cannot **resolve anything below 12.50%**. The claim
-  **needs 316 flagged shipments** to separate, which is 8000 shipments on one lane.
-- **221 tests**, **100% line coverage**, over a fixture of **2000 shipments** across
+  **needs 138 flagged shipments** to separate, which is 8000 shipments on one lane.
+- **233 tests**, **100.00% line coverage**, over a fixture of **2000 shipments** across
   **three lanes**.
 
 ## If someone says this is just event log analysis
@@ -166,7 +175,7 @@ It is noticing that a metric used everywhere in transport has a window that stru
 excludes most of what it is used to judge, measuring the exclusion on a log where the
 answer is known, showing that the exclusion makes carriers on different lanes incomparable,
 and then being honest that the natural follow on question, which upstream team to blame,
-cannot be answered reliably at all.
+usually has more than one correct answer rather than one the tool is failing to find.
 
 Knowing which standard technique applies to a messy operational question, and knowing what
 it cannot do, is the job.

@@ -4,8 +4,8 @@
 
 [![CI](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml/badge.svg)](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)
-![Tests](https://img.shields.io/badge/tests-221-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![Tests](https://img.shields.io/badge/tests-233-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-100.00%25-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ## The thing a carrier scorecard cannot tell you
@@ -46,19 +46,26 @@ Measured across twelve independent event logs of 4,000 shipments each:
   1.53 points across twelve logs. A metric that is nearly always right about what it flags
   and blind to most of the problem is the harder failure to notice, because being rarely
   wrong reads as being trustworthy.
-- **87.4% of late deliveries have more than one stage over plan**, so which single stage
-  gets named depends on a convention rather than on the data. The best convention recovers
-  88.4% of planted causes and the worst is down to 69.7%.
+- **61.8% of late deliveries have more than one stage over plan**, so which single stage
+  gets named depends on a convention rather than on the data. Every convention names a cause
+  that is true of the shipment on 100.0% of late deliveries; where they differ is which true
+  cause they name, and the usual recovery figure for that, 88.4% at best and 69.7% at worst,
+  measures agreement with an arbitrary label rather than correctness. ADR-008.
 - **A daily clock loses 52% of the late deliveries outright**, and the rounding rule alone
   swings the count by 51%. Nothing errors. The operation simply looks better than it is.
 - **In a 250 shipment sample the scorecard flags 21 shipments**, a granularity floor of
-  5.09% and a sampling interval that cannot resolve anything below 12.50%. The precision
-  claim needs 316 flagged shipments to separate from a claim five points away, which on a
-  single lane means 8000 shipments before it holds across most months. The floor alone used
-  to be the whole answer here and it is the narrower half of it: see ADR-005.
+  5.09% and a sampling interval that cannot resolve anything below 12.50%. At that measured
+  precision the claim needs 138 flagged shipments to separate, and on a single lane it takes
+  8000 shipments before it holds across most months, because the precision varies between
+  logs. The floor alone used to be the whole answer here and it is the narrower half of it:
+  see ADR-005.
 
-221 tests, 100% line coverage, and every figure above is re-measured by CI and checked
-against this document in both directions on every push.
+233 tests, 100.00% line coverage, and every figure above is re-measured by CI and checked
+against this document in both directions on every push. The coverage figure is published to
+two decimals because it used to be rounded to none, and a measurement a fifth of a point
+short of a hundred formatted as a round hundred while the badge check compared the badge
+against that same rounded value and agreed with itself. It happens to be a true hundred now;
+the format is what makes it checkable.
 
 ## Quickstart
 
@@ -144,25 +151,33 @@ on the one thing that differs between the lanes and is not the carrier.
 | proportional | 88.4% | warehouse |
 <!-- end generated: convention-table.md -->
 
-The two single cause conventions fail on opposite groups, and the gap between them is
-nineteen points. A release that overran by six hours has also missed the day's last
-departure: both stages are over plan, both statements are true, and no rule makes one of
-them the cause. `first_cause` recovers every warehouse overrun and blames missed cutoffs on
-the warehouse too. `largest_cause` recovers every missed cutoff and loses the warehouse
-overruns large enough that the timetable added more waiting than the overrun itself, which
-on a lane with one departure a day is most of them.
+**Read the second column before the first.** Every convention names a cause that is true
+of the shipment on 100.0% of late deliveries. None of them ever names a stage that did not
+run over its plan. The recovery column is a different measurement and a weaker one: it asks
+whether the convention named the same true cause the generator happened to write down.
 
-`proportional` is not a third opinion. It splits the lateness across every stage over plan,
-and its reported cause is whichever stage holds the largest share, which is the definition
-of `largest_cause`; the two agree on every shipment by construction and a test says so.
-Reading its matching row as corroboration would be reading one rule printed twice.
+Those are not the same question because most of these shipments have more than one true
+cause. A release that overran by six hours has also missed the day's last departure, so
+`warehouse` and `missed_cutoff` are both true of it, and which was planted depends only on
+which distribution the overrun was drawn from. Both labels are true of 96.2% of the
+shipments carrying either one. So the recovery spread is the rate at which each convention's
+tiebreak agrees with the generator's, and `first_cause` scores lower because it always names
+the earlier stage while the generator names the larger overrun most of the time. ADR-008 is
+the full account, including why the labels are not made disjoint.
 
-An earlier version of this table had both of these conventions below three quarters and
-said so as a ceiling on what attribution can do. That was arithmetic, not structure: the
-release overrun was being charged twice, once as itself and once as the departure it
-pushed, which made a missed departure mechanically larger than the overrun that caused it
-and sent almost every warehouse overrun to the departure. Netting the charge moved the
-recovery to 88.4%, from well under three fifths. ADR-007 is the full account.
+`proportional` is not a third opinion either. It splits the lateness across every stage over
+plan, and its reported cause is whichever stage holds the largest share, which is the
+definition of `largest_cause`; the two agree on every shipment by construction and a test
+says so. Reading its matching row as corroboration would be reading one rule printed twice.
+
+This table has been wrong twice, in opposite directions, and both corrections are worth more
+than the number. It first showed every convention below three quarters and called that a
+ceiling on what attribution can do, which was the release overrun being charged twice and is
+recorded in ADR-007. Then it showed 88.4% and called that recovery of the planted cause,
+which treated an arbitrary label as ground truth. What is left is narrower than either: the
+question "which upstream stage caused this" has more than one true answer on most late
+deliveries, so a tool that returns one answer is returning a convention, and the convention
+has to travel with the number.
 
 **The headline does not depend on this choice.** Both upstream stages lie outside the
 scorecard's window, so which one a convention names cannot change how much the scorecard
@@ -287,10 +302,10 @@ src/tta/
   resolution.py  clock coarsening, and the floor under every rate
   report.py      verdict policy, kept separate from the arithmetic
   cli.py         three subcommands, four exit codes
-experiments/     five experiments writing JSON to docs/experiments/
+experiments/     six experiments writing JSON to docs/experiments/
 tools/           collect_metrics.py, check_numbers.py, render_diagram.py,
                  capture_evidence.py
-docs/adr/        five decision records
+docs/adr/        eight decision records
 data/fixtures/   the committed event log and its planted causes
 ```
 
@@ -317,10 +332,10 @@ the class, which in Python is the same sentence twice.
 | --- | --- |
 | `make lint` | ruff check and format check |
 | `make test` | pytest with coverage and machine readable reports |
-| `make experiments` | re-run all five experiments |
+| `make experiments` | re-run every experiment |
 | `make fixture` | regenerate the committed event log and its planted causes |
 | `make receipts` | re-capture evidence, re-measure every figure, check this README |
-| `make verify` | lint, test, receipts |
+| `make verify` | lint, test, receipts, then the suite again. ADR-006 says why twice |
 
 `tools/check_numbers.py` works in both directions. Forward, every anchored figure must
 appear inside its **anchor phrase** rather than as a bare digit. Reverse, any number in
@@ -336,7 +351,7 @@ their cells cannot be guarded by phrases.
 | Python 3.11+ | everything | `itertools.pairwise` is how the timestamp ordering check reads as the invariant it is rather than as index arithmetic |
 | numpy | the generator and the replication statistics | the cause mix is a weighted draw over thousands of shipments, which is one call and a loop otherwise |
 | pandas | reading and writing event logs | a CSV with a header is what a transport team can actually export from a TMS |
-| pytest | 221 tests | parametrising over three conventions and four clock granularities is how the convention findings are pinned without a copy of each test |
+| pytest | 233 tests | parametrising over three conventions and four clock granularities is how the convention findings are pinned without a copy of each test |
 | ruff | lint and format | one tool, so a contributor cannot pass lint and fail format |
 | GitHub Actions | re-measurement | the numbers in this README are only trustworthy if something recomputes them without being asked |
 
@@ -354,6 +369,7 @@ that gives up.
 - [ADR-005: What a generated event log can and cannot establish](docs/adr/ADR-005-what-a-generated-event-log-cannot-establish.md)
 - [ADR-006: The receipts suite is the one failure that cannot block collection](docs/adr/ADR-006-the-receipts-suite-is-the-one-failure-that-cannot-block-collection.md)
 - [ADR-007: Charge the departure net of the overrun that forced it](docs/adr/ADR-007-charge-the-departure-net-of-the-overrun-that-forced-it.md)
+- [ADR-008: Grade admissibility beside recovery, because the labels overlap](docs/adr/ADR-008-grade-admissibility-beside-recovery.md)
 
 ## The Pivot
 

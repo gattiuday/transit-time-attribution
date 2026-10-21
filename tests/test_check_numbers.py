@@ -59,7 +59,48 @@ def _sandbox(tmp_path: Path) -> Path:
     return root
 
 
+@pytest.fixture
+def sandbox(tmp_path_factory):
+    """One copy of the checked surface per test, restored between mutations.
+
+    Building a fresh sandbox per mutation copied twenty five documents each
+    time, which is where the suite's time went: the two exhaustive swap tests
+    alone took twenty four seconds between them and almost none of it was the
+    checker. The fixture yields the root and a `restore` callable that puts one
+    file back, so a test can mutate, check, restore and move on.
+    """
+    root = _sandbox(tmp_path_factory.mktemp("sandbox"))
+    pristine = {name: (root / name).read_text() for name in _payload()["checked_documents"]}
+
+    def restore(name: str) -> None:
+        (root / name).write_text(pristine[name])
+
+    yield root, restore
+
+
 def _run(root: Path) -> int:
+    """Run the checker against a sandbox, in process.
+
+    This spawned a subprocess per case, and with the mutation matrix below that
+    reached roughly ninety spawns taking seventy three of the suite's eighty six
+    seconds, doubled by `make verify` running the suite twice. The checker's
+    entry point is importable and takes the metrics file as an argument, so the
+    only thing a subprocess was buying was a fresh `ROOT`, which a context
+    manager buys for nothing. `test_the_command_line_entry_point_still_exits_non_zero`
+    keeps one real spawn, because an exit code is a contract and an in process
+    return value is not the same thing.
+    """
+    previous = check_numbers.ROOT
+    check_numbers.ROOT = root
+    try:
+        return check_numbers.main(["--metrics", str(root / "docs" / "metrics.json")])
+    except SystemExit as exit_code:  # argparse on a bad argument
+        return int(exit_code.code or 0)
+    finally:
+        check_numbers.ROOT = previous
+
+
+def _spawn(root: Path) -> int:
     return subprocess.run(
         [sys.executable, str(root / "tools" / "check_numbers.py")],
         cwd=root,
@@ -130,9 +171,9 @@ PUBLISHED = sorted(_payload()["formatted"]) if METRICS.exists() else []
 
 
 @pytest.mark.parametrize("metric", PUBLISHED)
-def test_corrupting_a_published_figure_fails_the_build(tmp_path, metric):
+def test_corrupting_a_published_figure_fails_the_build(sandbox, metric):
     """Every published value, corrupted in place, must turn the checker red."""
-    root = _sandbox(tmp_path)
+    root, _ = sandbox
     value = _payload()["formatted"][metric]
     if not _corrupt(root, value, _nudge(value)):
         pytest.skip(f"{metric} = {value} is not quoted in any checked document")
@@ -394,7 +435,7 @@ def _lines_with_two_published_figures(document: str) -> list[tuple[int, str, str
 
 
 @pytest.mark.parametrize("document", ["README.md", "docs/defense-guide.md"])
-def test_swapping_one_published_figure_for_another_on_the_same_line_fails(tmp_path, document):
+def test_swapping_one_published_figure_for_another_on_the_same_line_fails(sandbox, document):
     """Every line that quotes two published figures, corrupted both ways.
 
     Not one example. The audit found this on the first sentence of the README
@@ -404,10 +445,11 @@ def test_swapping_one_published_figure_for_another_on_the_same_line_fails(tmp_pa
     pairs = _lines_with_two_published_figures(document)
     assert pairs, f"{document} quotes no line with two published figures, so this proves nothing"
 
+    root, restore = sandbox
     survivors = []
-    for index, (_, first, second) in enumerate(pairs):
+    for _, first, second in pairs:
         for original, replacement in ((first, second), (second, first)):
-            root = _sandbox(tmp_path / f"case{index}{original}{replacement}")
+            restore(document)
             target = root / document
             body = target.read_text()
             lines = body.split("\n")
@@ -468,3 +510,20 @@ def test_deleting_a_published_figure_fails_the_build(tmp_path, metric):
         removed += 1
     assert removed, f"{metric} is quoted nowhere, so this test proves nothing"
     assert _run(root) != 0, f"{metric} can be deleted from the prose with the build green"
+
+
+def test_the_command_line_entry_point_still_exits_non_zero(tmp_path):
+    """One real spawn, because an exit code is the contract CI depends on.
+
+    Everything else in this file calls `main` in process, which is a return
+    value and not an exit status. If the two ever disagree, CI goes green on a
+    checker that is reporting failures.
+    """
+    root = _sandbox(tmp_path / "spawn")
+    assert _spawn(root) == 0
+    readme = root / "README.md"
+    body = readme.read_text()
+    value = _payload()["formatted"]["upstream_share_pct"]
+    assert value in body
+    readme.write_text(body.replace(value, "11.1", 1))
+    assert _spawn(root) == 1
