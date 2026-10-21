@@ -16,9 +16,7 @@ def test_an_on_plan_shipment_has_no_stage_over_plan(on_plan, one_lane, handling)
     assert all(value <= 0 for value in lateness.values())
 
 
-def test_a_shipment_that_misses_its_cutoff_is_charged_a_whole_day(
-    on_plan, one_lane, handling
-):
+def test_a_shipment_that_misses_its_cutoff_is_charged_a_whole_day(on_plan, one_lane, handling):
     """The counterfactual, as an assertion: the charge is the departure the late
     release caused the shipment to miss, not the wait it then sat through."""
     late_release = dataclasses.replace(
@@ -45,9 +43,7 @@ def test_a_shipment_delivered_on_time_has_no_cause(on_plan, one_lane, handling):
     assert result.shares == {}
 
 
-def test_a_late_shipment_with_no_stage_over_plan_is_a_planning_failure(
-    on_plan, one_lane, handling
-):
+def test_a_late_shipment_with_no_stage_over_plan_is_a_planning_failure(on_plan, one_lane, handling):
     impossible = dataclasses.replace(
         on_plan, promised_delivery=on_plan.ship_confirm + on_plan.committed_transit - 7200
     )
@@ -56,9 +52,7 @@ def test_a_late_shipment_with_no_stage_over_plan_is_a_planning_failure(
     assert result.cause == INFEASIBLE_PLAN
 
 
-def test_the_largest_cause_convention_names_the_biggest_overrun(
-    on_plan, one_lane, handling
-):
+def test_the_largest_cause_convention_names_the_biggest_overrun(on_plan, one_lane, handling):
     slow_transit = dataclasses.replace(
         on_plan,
         delivered=on_plan.delivered + 3 * SECONDS_PER_DAY,
@@ -67,9 +61,7 @@ def test_the_largest_cause_convention_names_the_biggest_overrun(
     assert attribute(slow_transit, one_lane, handling, "largest_cause").cause == "transit"
 
 
-def test_the_first_cause_convention_names_the_earliest_overrun(
-    on_plan, one_lane, handling
-):
+def test_the_first_cause_convention_names_the_earliest_overrun(on_plan, one_lane, handling):
     both = dataclasses.replace(
         on_plan,
         released=on_plan.planned_release + 3600,
@@ -78,9 +70,7 @@ def test_the_first_cause_convention_names_the_earliest_overrun(
     assert attribute(both, one_lane, handling, "first_cause").cause == "order_to_release"
 
 
-def test_the_proportional_convention_splits_across_every_late_stage(
-    on_plan, one_lane, handling
-):
+def test_the_proportional_convention_splits_across_every_late_stage(on_plan, one_lane, handling):
     both = dataclasses.replace(
         on_plan,
         released=on_plan.planned_release + 3600,
@@ -96,9 +86,7 @@ def test_an_unknown_convention_is_refused_by_name(on_plan, one_lane, handling):
         attribute(on_plan, one_lane, handling, "blame_carrier")
 
 
-def test_an_upstream_cause_is_flagged_as_outside_the_scorecard(
-    on_plan, one_lane, handling
-):
+def test_an_upstream_cause_is_flagged_as_outside_the_scorecard(on_plan, one_lane, handling):
     late_release = dataclasses.replace(
         on_plan,
         released=one_lane.cutoff_hour * 3600 - handling + 60,
@@ -119,9 +107,7 @@ def test_an_on_time_shipment_is_not_flagged_as_upstream(on_plan, one_lane, handl
     assert not attribute(on_plan, one_lane, handling).upstream_of_carrier
 
 
-def test_the_attribution_round_trips_through_a_plain_dictionary(
-    on_plan, one_lane, handling
-):
+def test_the_attribution_round_trips_through_a_plain_dictionary(on_plan, one_lane, handling):
     result = attribute(on_plan, one_lane, handling)
     assert type(result)(**result.as_dict()) == result
 
@@ -158,9 +144,7 @@ def test_most_late_deliveries_are_invisible_to_a_carrier_scorecard(log, lanes, h
     assert summary.late_but_carrier_looks_fine > summary.carrier_flagged
 
 
-def test_the_upstream_share_is_undefined_when_nothing_was_late(
-    on_plan, lanes, handling
-):
+def test_the_upstream_share_is_undefined_when_nothing_was_late(on_plan, lanes, handling):
     """Not zero. A rate with no denominator is undefined, and reporting zero
     would read as a perfect operation rather than as an empty question."""
     summary, _ = attribute_log([on_plan], lanes, handling)
@@ -168,17 +152,13 @@ def test_the_upstream_share_is_undefined_when_nothing_was_late(
         _ = summary.upstream_share_of_late
 
 
-def test_the_multiple_cause_share_is_undefined_when_nothing_was_late(
-    on_plan, lanes, handling
-):
+def test_the_multiple_cause_share_is_undefined_when_nothing_was_late(on_plan, lanes, handling):
     summary, _ = attribute_log([on_plan], lanes, handling)
     with pytest.raises(AttributionError, match="undefined rather than zero"):
         _ = summary.multiple_cause_share
 
 
-def test_scorecard_precision_is_undefined_when_nothing_was_flagged(
-    on_plan, lanes, handling
-):
+def test_scorecard_precision_is_undefined_when_nothing_was_flagged(on_plan, lanes, handling):
     """Not perfect. A precision over zero flags is the absence of a measurement."""
     summary, _ = attribute_log([on_plan], lanes, handling)
     with pytest.raises(AttributionError, match="undefined rather than perfect"):

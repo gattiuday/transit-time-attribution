@@ -65,9 +65,7 @@ def test_day_granularity_loses_most_of_the_lateness(log, lanes, handling):
 def test_coarser_granularity_never_sharpens_the_attribution(log, lanes, handling):
     counts = []
     for granularity in ("minute", "quarter_hour", "hour", "day"):
-        summary, _ = attribute_log(
-            [coarsen(s, granularity) for s in log], lanes, handling
-        )
+        summary, _ = attribute_log([coarsen(s, granularity) for s in log], lanes, handling)
         counts.append(summary.late)
     assert counts[0] >= counts[-1]
 

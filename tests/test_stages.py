@@ -8,7 +8,7 @@ import pytest
 
 from tta.config import LANES, departure_slots, next_departure
 from tta.errors import UnattributableShipment
-from tta.stages import CARRIER_STAGE, SECONDS_PER_DAY, STAGES, Shipment
+from tta.stages import CARRIER_STAGE, SECONDS_PER_DAY, STAGES
 
 
 def test_the_three_stages_are_named_in_lifecycle_order():

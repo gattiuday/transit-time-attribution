@@ -15,6 +15,7 @@ import pytest
 from conftest import EXPECTED_CAUSE
 
 from tta.attribute import attribute_log
+from tta.errors import AttributionError
 from tta.generator import DEPART_FLOOR_SECONDS, generate_log, lanes_by_name
 
 
@@ -94,12 +95,10 @@ def test_no_convention_recovers_every_planted_cause():
 def test_the_two_single_cause_conventions_fail_on_opposite_groups():
     """Which is why the tool reports the convention beside every number."""
     first = Counter(
-        planted for planted, row in _graded("first_cause")
-        if EXPECTED_CAUSE[planted] != row.cause
+        planted for planted, row in _graded("first_cause") if EXPECTED_CAUSE[planted] != row.cause
     )
     largest = Counter(
-        planted for planted, row in _graded("largest_cause")
-        if EXPECTED_CAUSE[planted] != row.cause
+        planted for planted, row in _graded("largest_cause") if EXPECTED_CAUSE[planted] != row.cause
     )
     assert first.most_common(1)[0][0] == "missed_cutoff"
     assert largest.most_common(1)[0][0] == "warehouse"
@@ -118,7 +117,43 @@ def test_recovery_holds_on_a_larger_log():
     for shipments in (2_000, 4_000):
         graded = _graded("largest_cause", shipments)
         rates.append(
-            sum(1 for planted, row in graded if EXPECTED_CAUSE[planted] == row.cause)
-            / len(graded)
+            sum(1 for planted, row in graded if EXPECTED_CAUSE[planted] == row.cause) / len(graded)
         )
     assert abs(rates[0] - rates[1]) < 0.05
+
+
+def test_a_cause_mix_that_does_not_sum_to_one_is_refused():
+    with pytest.raises(AttributionError, match="must sum to 1"):
+        generate_log(100, cause_mix={"none": 0.5, "carrier": 0.2})
+
+
+def test_an_unknown_cause_in_the_mix_is_refused_by_name():
+    with pytest.raises(AttributionError, match="unknown cause"):
+        generate_log(100, cause_mix={"none": 0.5, "weather": 0.5})
+
+
+def test_a_log_of_zero_shipments_is_refused():
+    with pytest.raises(AttributionError, match="at least 1"):
+        generate_log(0)
+
+
+def test_the_generator_is_reproducible_for_a_fixed_seed():
+    first, first_truth = generate_log(200, seed=11)
+    second, second_truth = generate_log(200, seed=11)
+    assert [s.as_dict() for s in first] == [s.as_dict() for s in second]
+    assert first_truth == second_truth
+
+
+def test_a_different_seed_produces_a_different_log():
+    first, _ = generate_log(200, seed=11)
+    second, _ = generate_log(200, seed=12)
+    assert [s.as_dict() for s in first] != [s.as_dict() for s in second]
+
+
+def test_a_carrier_only_log_leaves_the_scorecard_measuring_what_matters():
+    """The control case. Where the lateness really is the carrier's, the
+    scorecard sees it, and a tool that reported otherwise on every input would
+    be measuring its own assumptions."""
+    log, _ = generate_log(1_000, cause_mix={"none": 0.7, "carrier": 0.3})
+    summary, _ = attribute_log(log, lanes_by_name(), DEPART_FLOOR_SECONDS)
+    assert summary.upstream_share_of_late < 0.15

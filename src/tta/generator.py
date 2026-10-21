@@ -56,13 +56,6 @@ DEPART_FLOOR_SECONDS = 2 * 3600
 PLANNED_RELEASE_SECONDS = 6 * 3600
 
 
-def _lane_by_name(name: str) -> Lane:
-    for lane in LANES:
-        if lane.name == name:
-            return lane
-    raise AttributionError(f"unknown lane '{name}'")
-
-
 def lanes_by_name() -> dict[str, Lane]:
     """The fixture's lanes, keyed for the attribution."""
     return {lane.name: lane for lane in LANES}
