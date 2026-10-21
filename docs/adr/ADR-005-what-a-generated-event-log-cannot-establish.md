@@ -17,15 +17,15 @@ real log with a labelled answer, so grading the attribution at all requires plan
 Properties of the arithmetic and of the lifecycle, identical against real data:
 
 - **A carrier scorecard cannot see a delay that ends before ship confirm.** This follows
-  from the definition of the window, not from the data. The 71.9% upstream share is a
+  from the definition of the window, not from the data. The 73.0% upstream share is a
   property of this log; that the share is unmeasurable from a scorecard is general.
 - **A missed cutoff is a step, not a proportional cost.** A release one minute past the
   last departure costs the whole gap to the next one. A property of timetables.
 - **Lanes with different departure frequency are not comparable on delivered service.**
   Every lane in the fixture is generated with the same mix of planted causes, so the
   carriers are equally good by construction, and the three departure lane still shows
-  22.8% on the three departure lane against 36.8% late on the others. The mechanism transfers; the sizes do not.
-- **No single cause convention recovers every planted cause**, because 62.8% of late
+  26.6% on the three departure lane against 36.8% late on the others. The mechanism transfers; the sizes do not.
+- **No single cause convention recovers every planted cause**, because 87.4% of late
   deliveries have more than one stage over plan. Structural.
 - **A coarser clock loses the attribution silently.** It reports fewer late shipments
   rather than an error.
@@ -35,12 +35,12 @@ Properties of the arithmetic and of the lifecycle, identical against real data:
 
 ## Claims the fixture establishes only conditionally
 
-- **The 71.9% upstream share.** It follows directly from the planted cause mix, which was
+- **The 73.0% upstream share.** It follows directly from the planted cause mix, which was
   chosen to have enough lateness of each kind to measure. A real operation with a tight
   warehouse and a loose timetable would show far less; one with a 14:00 cutoff and a
   struggling pick line would show more. What transfers is that the share is not zero and
   is not visible from the scorecard.
-- **The scorecard's precision of 92.6% and 28.1% recall.** The precision is high because the
+- **The scorecard's precision of 92.6% and 27.0% recall.** The precision is high because the
   generator's carrier overruns are large enough to breach the committed window every time.
   Real carrier lateness includes marginal misses that a tolerance absorbs, so real
   precision would be lower and real recall lower still. The shape, precise about what it

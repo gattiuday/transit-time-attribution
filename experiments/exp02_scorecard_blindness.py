@@ -21,29 +21,54 @@ from tta.generator import DEPART_FLOOR_SECONDS, generate_log, lanes_by_name
 
 
 def main() -> None:
-    upstream, precision, recall, invisible, multi = [], [], [], [], []
-    by_convention = {}
+    upstream, stage, infeasible, precision, multi = [], [], [], [], []
+    by_convention = {convention: [] for convention in CONVENTIONS}
     for replication in range(REPLICATIONS):
-        log, _ = generate_log(SHIPMENTS, seed=20261021 + 97 * replication)
+        seed = 20261021 + 97 * replication
+        log, _ = generate_log(SHIPMENTS, seed=seed)
         summary, _ = attribute_log(log, lanes_by_name(), DEPART_FLOOR_SECONDS)
         upstream.append(summary.upstream_share_of_late)
+        stage.append(summary.stage_share_of_late)
+        infeasible.append(summary.infeasible_share_of_late)
         precision.append(summary.scorecard_precision)
-        recall.append(summary.carrier_flagged_and_truly_carrier / summary.late)
-        invisible.append(summary.late_but_carrier_looks_fine / summary.late)
         multi.append(summary.multiple_cause_share)
 
-    # The headline must not depend on the arbitrary step, so it is measured
-    # under every convention rather than asserted to be independent.
-    for convention in CONVENTIONS:
-        log, _ = generate_log(SHIPMENTS)
-        summary, _ = attribute_log(log, lanes_by_name(), DEPART_FLOOR_SECONDS, convention)
-        by_convention[convention] = summary.upstream_share_of_late
+        # Three measures this experiment used to publish as separate findings.
+        # A late delivery the carrier looks fine on is exactly a late delivery
+        # whose cause is upstream, and recall is one minus that, so the three
+        # are one measurement and its complement. They were three bullets in
+        # the README reading as mutual corroboration. Asserted here rather than
+        # reported, so the identity is pinned and the page states it once.
+        invisible = summary.late_but_carrier_looks_fine / summary.late
+        recall = summary.carrier_flagged_and_truly_carrier / summary.late
+        assert invisible == summary.upstream_share_of_late, (
+            f"replication {replication}: the invisible share and the upstream share are "
+            "the same quantity and have stopped agreeing"
+        )
+        assert abs(recall - (1 - summary.upstream_share_of_late)) < 1e-12, (
+            f"replication {replication}: recall is the complement of the upstream share "
+            "and has stopped being it"
+        )
+
+        # The headline must not depend on the arbitrary step, so it is measured
+        # under every convention on every log. This used to sit outside the
+        # replication loop and call `generate_log(SHIPMENTS)` with the default
+        # seed three times, so the published convention spread was one draw
+        # reported inside a document that opens "twelve independent logs".
+        for convention in CONVENTIONS:
+            under, _ = attribute_log(log, lanes_by_name(), DEPART_FLOOR_SECONDS, convention)
+            by_convention[convention].append(under.upstream_share_of_late)
+
+    spreads = [
+        max(values) - min(values)
+        for values in zip(*(by_convention[c] for c in CONVENTIONS), strict=True)
+    ]
 
     rows = [
         ("upstream share of late deliveries", upstream),
+        ("of which a stage before ship confirm", stage),
+        ("of which the plan never reached the promise", infeasible),
         ("scorecard precision, of what it flags", precision),
-        ("scorecard recall, of all late deliveries", recall),
-        ("late with the carrier inside its window", invisible),
         ("late with more than one stage over plan", multi),
     ]
     printed = [
@@ -72,9 +97,11 @@ def main() -> None:
                 }
                 for label, values in rows
             },
-            "upstream_share_by_convention": by_convention,
-            "upstream_share_convention_spread": max(by_convention.values())
-            - min(by_convention.values()),
+            "upstream_share_by_convention": {
+                convention: float(np.mean(values)) for convention, values in by_convention.items()
+            },
+            "upstream_share_convention_spread": float(np.mean(spreads)),
+            "upstream_share_convention_spread_max": float(max(spreads)),
             "note": (
                 "the upstream share is identical under every convention, because both "
                 "upstream stages lie outside the scorecard's window and which of them "

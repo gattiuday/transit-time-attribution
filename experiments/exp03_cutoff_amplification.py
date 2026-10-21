@@ -87,6 +87,21 @@ def main() -> None:
     worst_carrier = max(per_lane_out.items(), key=lambda kv: kv[1]["carrier_rate"]["mean"])
     best_otif = min(per_lane_out.items(), key=lambda kv: kv[1]["late_rate"]["mean"])
 
+    # Whether either ranking can be read at all. A spread smaller than the
+    # standard error of the means it separates is not a ranking, and an earlier
+    # version of this repository published one as a bold claim in the README and
+    # the opposite of it in the defense guide, because nothing here measured
+    # whether the ordering was resolvable. `worst_carrier_is_best_otif` was
+    # computed, written to this file, and read by nothing.
+    carrier_means = [value["carrier_rate"]["mean"] for value in per_lane_out.values()]
+    carrier_sds = [value["carrier_rate"]["sd"] for value in per_lane_out.values()]
+    late_means = [value["late_rate"]["mean"] for value in per_lane_out.values()]
+    late_sds = [value["late_rate"]["sd"] for value in per_lane_out.values()]
+    carrier_spread = max(carrier_means) - min(carrier_means)
+    late_spread = max(late_means) - min(late_means)
+    carrier_se = max(carrier_sds) / np.sqrt(REPLICATIONS)
+    late_se = max(late_sds) / np.sqrt(REPLICATIONS)
+
     emit(
         "exp03_cutoff_amplification",
         {
@@ -104,12 +119,22 @@ def main() -> None:
             "worst_carrier_lane": worst_carrier[0],
             "best_otif_lane": best_otif[0],
             "worst_carrier_is_best_otif": worst_carrier[0] == best_otif[0],
+            "carrier_rate_spread_points": carrier_spread * 100,
+            "carrier_rate_standard_error_points": carrier_se * 100,
+            "carrier_ranking_is_resolvable": bool(carrier_spread > 2 * carrier_se),
+            "late_rate_spread_points": late_spread * 100,
+            "late_rate_standard_error_points": late_se * 100,
+            "late_rate_ranking_is_resolvable": bool(late_spread > 2 * late_se),
             "note": (
                 "every lane is generated with the same mix of planted causes, so the "
-                "carriers are equally good by construction. The lane with the most "
-                "departures still shows the best delivered service and the largest "
-                "carrier share of its own lateness, because a forgiving timetable "
-                "absorbs upstream error and leaves only the carrier's own"
+                "carriers are equally good by construction, and the measurement agrees: "
+                "the spread in carrier caused rate across the three lanes is smaller "
+                "than the standard error of any one lane's mean, so the ranking by "
+                "carrier rate is not resolvable and must not be read. The spread in "
+                "delivered service is many times its own standard error and is "
+                "resolvable, and it is produced entirely by the departure timetable. "
+                "That asymmetry is the finding: the thing a scorecard ranks cannot be "
+                "ranked and the thing it attributes to the carrier is the timetable"
             ),
         },
         rows_out,

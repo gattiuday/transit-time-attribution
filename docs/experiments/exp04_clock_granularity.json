@@ -1,71 +1,71 @@
 {
-  "late_lost_to_daily_clock_share": 0.5087252675964968,
+  "late_lost_to_daily_clock_share": 0.5196531070626405,
   "note": "an hourly clock costs almost nothing, which was not the expected result and is reported as measured. A daily clock loses most of the late shipments outright, and it does so silently: nothing errors, the operation simply looks better than it is",
   "question": "how much of the attribution survives a coarser clock",
   "replications": 12,
   "series": [
     {
       "granularity": "minute",
-      "late_mean": 1284.5833333333333,
-      "late_sd": 28.414011695043357,
+      "late_mean": 1335.6666666666667,
+      "late_sd": 26.955631333843037,
       "mode": "floor",
       "seconds": 60,
-      "upstream_share_mean": 0.7189045894401502,
-      "upstream_share_sd": 0.009620768064934357
+      "upstream_share_mean": 0.7296490078734003,
+      "upstream_share_sd": 0.009769085849780637
     },
     {
       "granularity": "minute",
-      "late_mean": 1284.4166666666667,
-      "late_sd": 28.54170261001939,
+      "late_mean": 1335.5,
+      "late_sd": 27.07733033705166,
       "mode": "nearest",
       "seconds": 60,
-      "upstream_share_mean": 0.7188687155898855,
-      "upstream_share_sd": 0.009584854851134424
+      "upstream_share_mean": 0.7296159716405924,
+      "upstream_share_sd": 0.009735359141389802
     },
     {
       "granularity": "quarter_hour",
-      "late_mean": 1282.5,
-      "late_sd": 27.76361254984988,
+      "late_mean": 1332.75,
+      "late_sd": 26.378796581552184,
       "mode": "floor",
       "seconds": 900,
-      "upstream_share_mean": 0.7191607619804223,
-      "upstream_share_sd": 0.00957630597390314
+      "upstream_share_mean": 0.7297448382560855,
+      "upstream_share_sd": 0.009665755838251317
     },
     {
       "granularity": "quarter_hour",
-      "late_mean": 1282.8333333333333,
-      "late_sd": 28.733361456781566,
+      "late_mean": 1333.0833333333333,
+      "late_sd": 27.043595556176708,
       "mode": "nearest",
       "seconds": 900,
-      "upstream_share_mean": 0.7191119797025932,
-      "upstream_share_sd": 0.009677402561470766
+      "upstream_share_mean": 0.7296947806645782,
+      "upstream_share_sd": 0.00982447588129665
     },
     {
       "granularity": "hour",
-      "late_mean": 1273.25,
-      "late_sd": 28.825887986006922,
+      "late_mean": 1320.0,
+      "late_sd": 27.488840711029695,
       "mode": "floor",
       "seconds": 3600,
-      "upstream_share_mean": 0.7200177018834292,
-      "upstream_share_sd": 0.00952944454311773
+      "upstream_share_mean": 0.7299230150511664,
+      "upstream_share_sd": 0.009838791978836484
     },
     {
       "granularity": "hour",
-      "late_mean": 1275.4166666666667,
-      "late_sd": 28.78275472738789,
+      "late_mean": 1323.5833333333333,
+      "late_sd": 26.94255955085773,
       "mode": "nearest",
       "seconds": 3600,
-      "upstream_share_mean": 0.7200309959788425,
-      "upstream_share_sd": 0.009648543534847967
+      "upstream_share_mean": 0.7302101008912393,
+      "upstream_share_sd": 0.009952929435692655
     },
     {
       "granularity": "day",
-      "late_mean": 631.0833333333334,
-      "late_sd": 27.661783066610916,
+      "late_mean": 641.5833333333334,
+      "late_sd": 27.651921956326795,
       "mode": "floor",
       "seconds": 86400,
-      "upstream_share_mean": 0.6387661138881414,
-      "upstream_share_sd": 0.013812991588430882
+      "upstream_share_mean": 0.9011729756348811,
+      "upstream_share_sd": 0.012641392553654504
     },
     {
       "granularity": "day",
@@ -77,6 +77,6 @@
       "upstream_share_sd": 0.00983361996051797
     }
   ],
-  "upstream_share_shift_at_daily_points": 8.013847555200881,
-  "upstream_share_shift_at_hourly_points": 0.11131124432789408
+  "upstream_share_shift_at_daily_points": -17.15239677614808,
+  "upstream_share_shift_at_hourly_points": 0.02740071777661557
 }

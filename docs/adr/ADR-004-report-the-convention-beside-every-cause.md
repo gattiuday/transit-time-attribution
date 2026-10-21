@@ -10,7 +10,7 @@ asking a question the data cannot answer, because the second is a consequence of
 and the first is not sufficient on its own: a six hour overrun on a lane with a later
 cutoff would have cost nothing.
 
-On this repository's fixture, 62.8% of late deliveries have more than one stage over plan.
+On this repository's fixture, 87.4% of late deliveries have more than one stage over plan.
 That is not an artefact of the generator. It is what a step function downstream of a
 continuous overrun produces.
 
@@ -32,9 +32,9 @@ Graded against the planted cause across twelve independent logs:
 
 | Convention | Recovery | Loses most on |
 | --- | --- | --- |
-| first_cause | 72.4% | missed cutoffs, which it blames on the warehouse |
-| largest_cause | 67.3% | warehouse overruns, which it blames on the departure wait |
-| proportional | 67.3% | the same as largest_cause, since it names the largest for a single cause |
+| first_cause | 69.7% | missed cutoffs, which it blames on the warehouse |
+| largest_cause | 88.4% | warehouse overruns the timetable amplified past the overrun itself |
+| proportional | 88.4% | the same as largest_cause, since it names the largest for a single cause |
 
 **The two single cause conventions fail on opposite groups, and neither clears four
 fifths.** `first_cause` recovers every warehouse overrun and sends every missed cutoff to

@@ -1,0 +1,35 @@
+{
+  "measures": {
+    "late deliveries charged past their lateness": {
+      "max": 0.9252336448598131,
+      "mean": 0.9123799294603443,
+      "min": 0.9022556390977443,
+      "sd": 0.006968162402935932
+    },
+    "recovery after netting": {
+      "max": 0.9001524390243902,
+      "mean": 0.8843353706673249,
+      "min": 0.8713754646840148,
+      "sd": 0.00766059503968579
+    },
+    "recovery under the double charge": {
+      "max": 0.7045112781954888,
+      "mean": 0.6856547711681432,
+      "min": 0.6643302180685359,
+      "sd": 0.012044225262446567
+    },
+    "total charged over total lateness": {
+      "max": 2.1220429309378255,
+      "mean": 2.0543983699824557,
+      "min": 1.9811103899812499,
+      "sd": 0.03466349282999833
+    }
+  },
+  "note": "the double charge did not move the headline, which is why it survived: both upstream stages lie outside the scorecard's window and netting moves lateness between them rather than out of them. What it moved was which upstream stage got named, and through that the recovery rate, which this repository had written up as a structural ceiling on attribution rather than as its own arithmetic",
+  "question": "what did charging the release overrun twice do",
+  "replications": 12,
+  "shipments_per_log": 4000,
+  "warehouse_planted": 5428,
+  "warehouse_recovered_after_netting": 3696,
+  "warehouse_recovered_under_double_charge": 391
+}

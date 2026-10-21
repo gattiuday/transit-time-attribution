@@ -1,9 +1,9 @@
 cause                   late deliveries  share of late   scorecard
 ------------------------------------------------------------------
-release_to_depart                   379         59.5%     outside
-transit                             174         27.3%      inside
-infeasible_plan                      74         11.6%     outside
-order_to_release                     10          1.6%     outside
+release_to_depart                   274         41.3%     outside
+transit                             174         26.2%      inside
+order_to_release                    141         21.3%     outside
+infeasible_plan                      74         11.2%     outside
 ------------------------------------------------------------------
-total late                          637        100.0%
-of which upstream                               72.7%
+total late                          663        100.0%
+of which upstream                               73.8%

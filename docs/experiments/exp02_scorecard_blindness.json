@@ -1,16 +1,22 @@
 {
   "measures": {
     "late with more than one stage over plan": {
-      "max": 0.6515028432168968,
-      "mean": 0.6278178423883142,
-      "min": 0.6141855027279813,
-      "sd": 0.01116336402570234
+      "max": 0.8873668188736682,
+      "mean": 0.8739153793393073,
+      "min": 0.8610067618332081,
+      "sd": 0.00762479495550071
     },
-    "late with the carrier inside its window": {
-      "max": 0.7343260188087775,
-      "mean": 0.7189221219990052,
-      "min": 0.7060221870047544,
-      "sd": 0.009622659333522732
+    "of which a stage before ship confirm": {
+      "max": 0.6658878504672897,
+      "mean": 0.6420453422950974,
+      "min": 0.6261329305135952,
+      "sd": 0.011423486588791531
+    },
+    "of which the plan never reached the promise": {
+      "max": 0.09774436090225563,
+      "mean": 0.0876200705396556,
+      "min": 0.07476635514018691,
+      "sd": 0.006968162402935936
     },
     "scorecard precision, of what it flags": {
       "max": 0.9522546419098143,
@@ -18,17 +24,11 @@
       "min": 0.9004854368932039,
       "sd": 0.015346451114740579
     },
-    "scorecard recall, of all late deliveries": {
-      "max": 0.29397781299524567,
-      "mean": 0.2810778780009949,
-      "min": 0.2656739811912226,
-      "sd": 0.009622659333522727
-    },
     "upstream share of late deliveries": {
-      "max": 0.7343260188087775,
-      "mean": 0.7189221219990052,
-      "min": 0.7060221870047544,
-      "sd": 0.009622659333522732
+      "max": 0.7439577039274925,
+      "mean": 0.7296654128347532,
+      "min": 0.7174231332357247,
+      "sd": 0.009767923671307282
     }
   },
   "note": "the upstream share is identical under every convention, because both upstream stages lie outside the scorecard's window and which of them is named cannot change how much it misses. Precision and recall are the pair that matters: the scorecard is right about what it flags and flags a minority of what went wrong",
@@ -36,9 +36,10 @@
   "replications": 12,
   "shipments_per_log": 4000,
   "upstream_share_by_convention": {
-    "first_cause": 0.7244340359094458,
-    "largest_cause": 0.7244340359094458,
-    "proportional": 0.7244340359094458
+    "first_cause": 0.7296654128347532,
+    "largest_cause": 0.7296654128347532,
+    "proportional": 0.7296654128347532
   },
-  "upstream_share_convention_spread": 0.0
+  "upstream_share_convention_spread": 0.0,
+  "upstream_share_convention_spread_max": 0.0
 }

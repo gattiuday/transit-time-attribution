@@ -2,10 +2,20 @@
   "anchors": {
     "best_recovery_pct": [
       "recovers {}%",
-      "first_cause | {}% | missed"
+      "moved the\nrecovery to {}%",
+      "largest_cause | {}% | warehouse overruns the timetable",
+      "from 68.6% to {}%",
+      "proportional | {}% | the same as largest_cause"
     ],
     "carrier_rate_spread_points": [
-      "spread of {} points"
+      "spread of {} points",
+      "caused rate differs across the three lanes by {} points",
+      "carrier rates differ by {} points and the standard"
+    ],
+    "carrier_rate_standard_error_points": [
+      "any one lane's mean is {} points",
+      "standard error of any one lane's mean is {}",
+      "rates differ by 0.2 points and the standard error of each is {}"
     ],
     "convention_spread_points": [
       "spread across conventions measures {} points"
@@ -31,13 +41,17 @@
       "an upstream share of {}% against 75.5%."
     ],
     "daily_nearest_late": [
-      "produce 631 and {} late shipments"
+      "produce 642 and {} late shipments"
     ],
     "daily_nearest_upstream_pct": [
-      "share of 63.9% against {}%. That is a 54%"
+      "share of 90.1% against {}%. That is a 51%"
     ],
     "experiment_shipments": [
       "logs of {} shipments"
+    ],
+    "fixture_infeasible_share_pct": [
+      "plans are {}% of",
+      "{}% of the late"
     ],
     "fixture_lanes": [
       "{} lanes"
@@ -52,16 +66,15 @@
     "hourly_clock_shift_points": [
       "shifts it by {} points"
     ],
-    "infeasible_plan_share_pct": [
-      "plans are {}% of",
-      "{}% of the late"
+    "infeasible_share_pct": [
+      "{}% whose plan never reached the promise"
     ],
-    "invisible_share_pct": [
-      "{}% arrive with the carrier",
-      "The {}% upstream",
-      "not from the data. The {}% upstream share",
-      "is general. That it is {}% is a fact about",
-      "that transfer. The {}% upstream share"
+    "late_rate_spread_points": [
+      "service varies by {} points across the three lanes",
+      "resolvable at thirty times its standard error"
+    ],
+    "late_rate_standard_error_points": [
+      "standard error of {}, so that ordering"
     ],
     "multi_departure_carrier_share_pct": [
       "{}% on the lane with three",
@@ -77,9 +90,19 @@
     "multiple_cause_share_pct": [
       "{}% of late deliveries have"
     ],
+    "over_attributed_pct": [
+      "the lateness on {}% of late deliveries"
+    ],
+    "over_attribution_ratio": [
+      "totalled {} times it"
+    ],
     "python_min_version": [
       "Python {} or newer. No API",
       "Python {}+ | everything |"
+    ],
+    "recovery_under_double_charge_pct": [
+      "recovery of {}%",
+      "from {}% to 88.4%"
     ],
     "resolution_floor_small_pct": [
       "floor of {}%"
@@ -90,14 +113,18 @@
       "The scorecard's {}% precision and",
       "precision of {}% and"
     ],
+    "scorecard_precision_sd": [
+      "an sd of {} points across twelve logs"
+    ],
     "scorecard_recall_pct": [
+      "Its recall, {}%, is that share",
       "sees {}%",
       "{}% of them",
       "92.6% precision and {}% recall. The",
       "and {}% recall"
     ],
     "single_departure_carrier_share_pct": [
-      "{}% of its own lateness"
+      "runs {}% on the single departure"
     ],
     "single_departure_late_pct": [
       "{}% late on"
@@ -120,6 +147,9 @@
       "needs about {} shipments to resolve",
       "needs about {} shipments to separate"
     ],
+    "stage_share_pct": [
+      "into {}% caused by a stage"
+    ],
     "tests_total": [
       "{} tests"
     ],
@@ -128,15 +158,21 @@
       "The {}% upstream",
       "not from the data. The {}% upstream share",
       "is general. That it is {}% is a fact about",
-      "that transfer. The {}% upstream share"
+      "that transfer. The {}% upstream share",
+      "The headline is unchanged at {}%"
     ],
     "upstream_share_sd": [
       "sd of {} points"
     ],
+    "warehouse_planted": [
+      "all but 391 of {} planted"
+    ],
+    "warehouse_recovered_under_double_charge": [
+      "all but {} of 5428 planted"
+    ],
     "worst_recovery_pct": [
       "down to {}%",
-      "proportional | {}% | the same as",
-      "largest_cause | {}% | warehouse"
+      "first_cause | {}% | missed cutoffs,"
     ]
   },
   "badge_only": [
@@ -151,6 +187,7 @@
     "docs/adr/ADR-004-report-the-convention-beside-every-cause.md",
     "docs/adr/ADR-005-what-a-generated-event-log-cannot-establish.md",
     "docs/adr/ADR-006-the-receipts-suite-is-the-one-failure-that-cannot-block-collection.md",
+    "docs/adr/ADR-007-charge-the-departure-net-of-the-overrun-that-forced-it.md",
     "src/tta/__init__.py",
     "src/tta/attribute.py",
     "src/tta/cli.py",
@@ -164,11 +201,13 @@
     "experiments/exp02_scorecard_blindness.py",
     "experiments/exp03_cutoff_amplification.py",
     "experiments/exp04_clock_granularity.py",
-    "experiments/exp05_resolution_floor.py"
+    "experiments/exp05_resolution_floor.py",
+    "experiments/exp06_double_charge.py"
   ],
   "formats": {
     "best_recovery_pct": "{:.1f}",
     "carrier_rate_spread_points": "{:.1f}",
+    "carrier_rate_standard_error_points": "{:.1f}",
     "convention_spread_points": "{:.1f}",
     "coverage_line_pct": "{:.0f}",
     "daily_clock_late_loss_pct": "{:.0f}",
@@ -178,60 +217,79 @@
     "daily_nearest_late": "{:.0f}",
     "daily_nearest_upstream_pct": "{:.1f}",
     "experiment_shipments": "{:,.0f}",
+    "fixture_infeasible_share_pct": "{:.1f}",
     "flagged_at_small_sample": "{:.0f}",
     "hourly_clock_shift_points": "{:.2f}",
-    "infeasible_plan_share_pct": "{:.1f}",
-    "invisible_share_pct": "{:.1f}",
+    "infeasible_share_pct": "{:.1f}",
+    "late_rate_spread_points": "{:.1f}",
+    "late_rate_standard_error_points": "{:.1f}",
     "multi_departure_carrier_share_pct": "{:.1f}",
     "multi_departure_late_pct": "{:.1f}",
     "multiple_cause_share_pct": "{:.1f}",
+    "over_attributed_pct": "{:.1f}",
+    "over_attribution_ratio": "{:.2f}",
     "python_min_version": "{:.2f}",
+    "recovery_under_double_charge_pct": "{:.1f}",
     "resolution_floor_small_pct": "{:.2f}",
     "scorecard_precision_pct": "{:.1f}",
+    "scorecard_precision_sd": "{:.2f}",
     "scorecard_recall_pct": "{:.1f}",
     "single_departure_carrier_share_pct": "{:.1f}",
     "single_departure_late_pct": "{:.1f}",
     "single_lane_best_late_pct": "{:.1f}",
     "single_lane_worst_late_pct": "{:.1f}",
+    "stage_share_pct": "{:.1f}",
     "upstream_share_pct": "{:.1f}",
     "upstream_share_sd": "{:.2f}",
+    "warehouse_planted": "{:d}",
+    "warehouse_recovered_under_double_charge": "{:d}",
     "worst_recovery_pct": "{:.1f}"
   },
   "formatted": {
-    "best_recovery_pct": "72.4",
+    "best_recovery_pct": "88.4",
     "carrier_rate_spread_points": "0.2",
+    "carrier_rate_standard_error_points": "0.3",
     "convention_spread_points": "0.0",
     "coverage_line_pct": "100",
-    "daily_clock_late_loss_pct": "51",
-    "daily_clock_mode_swing_pct": "54",
-    "daily_floor_late": "631",
-    "daily_floor_upstream_pct": "63.9",
+    "daily_clock_late_loss_pct": "52",
+    "daily_clock_mode_swing_pct": "51",
+    "daily_floor_late": "642",
+    "daily_floor_upstream_pct": "90.1",
     "daily_nearest_late": "970",
     "daily_nearest_upstream_pct": "75.5",
     "experiment_shipments": "4,000",
+    "fixture_infeasible_share_pct": "11.2",
     "fixture_lanes": "3",
     "fixture_shipments": "2000",
     "flagged_at_small_sample": "21",
-    "hourly_clock_shift_points": "0.11",
-    "infeasible_plan_share_pct": "11.6",
-    "invisible_share_pct": "71.9",
-    "multi_departure_carrier_share_pct": "40.1",
-    "multi_departure_late_pct": "22.8",
-    "multiple_cause_share_pct": "62.8",
+    "hourly_clock_shift_points": "0.03",
+    "infeasible_share_pct": "8.8",
+    "late_rate_spread_points": "10.5",
+    "late_rate_standard_error_points": "0.4",
+    "multi_departure_carrier_share_pct": "34.3",
+    "multi_departure_late_pct": "26.6",
+    "multiple_cause_share_pct": "87.4",
+    "over_attributed_pct": "91.2",
+    "over_attribution_ratio": "2.05",
     "python_min_version": "3.11",
+    "recovery_under_double_charge_pct": "68.6",
     "resolution_floor_small_pct": "5.09",
     "scorecard_precision_pct": "92.6",
-    "scorecard_recall_pct": "28.1",
+    "scorecard_precision_sd": "1.53",
+    "scorecard_recall_pct": "27.0",
     "single_departure_carrier_share_pct": "24.4",
     "single_departure_late_pct": "36.8",
-    "single_lane_best_late_pct": "22.8",
+    "single_lane_best_late_pct": "26.6",
     "single_lane_worst_late_pct": "37.1",
     "small_sample_shipments": "250",
     "smallest_supporting_sample": "2000",
-    "tests_total": "181",
-    "upstream_share_pct": "71.9",
-    "upstream_share_sd": "0.96",
-    "worst_recovery_pct": "67.3"
+    "stage_share_pct": "64.2",
+    "tests_total": "212",
+    "upstream_share_pct": "73.0",
+    "upstream_share_sd": "0.98",
+    "warehouse_planted": "5428",
+    "warehouse_recovered_under_double_charge": "391",
+    "worst_recovery_pct": "69.7"
   },
   "generated_blocks": {
     "README.md": [
@@ -242,40 +300,50 @@
     ]
   },
   "metrics": {
-    "best_recovery_pct": 72.4385936666725,
+    "best_recovery_pct": 88.4335370667325,
     "carrier_rate_spread_points": 0.16301864071714967,
+    "carrier_rate_standard_error_points": 0.2597324224935769,
     "convention_spread_points": 0.0,
     "coverage_line_pct": 100.0,
-    "daily_clock_late_loss_pct": 50.87252675964968,
-    "daily_clock_mode_swing_pct": 53.76997226990623,
-    "daily_floor_late": 631.0833333333334,
-    "daily_floor_upstream_pct": 63.87661138881414,
+    "daily_clock_late_loss_pct": 51.96531070626405,
+    "daily_clock_mode_swing_pct": 51.253409533705664,
+    "daily_floor_late": 641.5833333333334,
+    "daily_floor_upstream_pct": 90.11729756348811,
     "daily_nearest_late": 970.4166666666666,
     "daily_nearest_upstream_pct": 75.49225269900424,
     "experiment_shipments": 4000,
+    "fixture_infeasible_share_pct": 11.161387631975868,
     "fixture_lanes": 3,
     "fixture_shipments": 2000,
     "flagged_at_small_sample": 20.75,
-    "hourly_clock_shift_points": 0.11131124432789408,
-    "infeasible_plan_share_pct": 11.616954474097332,
-    "invisible_share_pct": 71.89221219990051,
-    "multi_departure_carrier_share_pct": 40.10017416974678,
-    "multi_departure_late_pct": 22.811952988247064,
-    "multiple_cause_share_pct": 62.78178423883142,
+    "hourly_clock_shift_points": 0.02740071777661557,
+    "infeasible_share_pct": 8.762007053965561,
+    "late_rate_spread_points": 10.483870967741932,
+    "late_rate_standard_error_points": 0.35252989910245014,
+    "multi_departure_carrier_share_pct": 34.3068387623842,
+    "multi_departure_late_pct": 26.644161040260073,
+    "multiple_cause_share_pct": 87.39153793393073,
+    "over_attributed_pct": 91.23799294603442,
+    "over_attribution_ratio": 2.0543983699824557,
     "python_min_version": 3.11,
+    "recovery_under_double_charge_pct": 68.56547711681432,
     "resolution_floor_small_pct": 5.092897655040104,
     "scorecard_precision_pct": 92.58148678818304,
-    "scorecard_recall_pct": 28.107787800099487,
+    "scorecard_precision_sd": 1.5346451114740578,
+    "scorecard_recall_pct": 27.033458716524684,
     "single_departure_carrier_share_pct": 24.40290690883799,
     "single_departure_late_pct": 36.767414304850575,
-    "single_lane_best_late_pct": 22.811952988247064,
+    "single_lane_best_late_pct": 26.644161040260073,
     "single_lane_worst_late_pct": 37.128032008002,
     "small_sample_shipments": 250,
     "smallest_supporting_sample": 2000,
-    "tests_total": 181,
-    "upstream_share_pct": 71.89221219990051,
-    "upstream_share_sd": 0.9622659333522733,
-    "worst_recovery_pct": 67.31393527686296
+    "stage_share_pct": 64.20453422950973,
+    "tests_total": 212,
+    "upstream_share_pct": 72.96654128347532,
+    "upstream_share_sd": 0.9767923671307281,
+    "warehouse_planted": 5428,
+    "warehouse_recovered_under_double_charge": 391,
+    "worst_recovery_pct": 69.66824867071433
   },
   "note": "every value here is read from a run: the test suite, the experiments, the committed fixture, or the project's own configuration. No figure is transcribed by hand"
 }

@@ -1,41 +1,43 @@
 {
-  "best_convention": "first_cause",
-  "best_recovery_mean": 0.724385936666725,
+  "best_convention": "largest_cause",
+  "best_recovery_mean": 0.8843353706673249,
   "note": "no convention clears four fifths, and the two single cause ones fail on opposite groups. That is not a defect in the arithmetic: a release that overran by hours has also missed the day's last departure, both stages are over plan, and no rule makes one of them the cause",
   "per_convention": {
     "first_cause": {
       "confusion": {
         "carrier->transit": 4334,
         "infeasible_plan->infeasible_plan": 1405,
-        "missed_cutoff->order_to_release": 4249,
+        "missed_cutoff->order_to_release": 4862,
         "warehouse->order_to_release": 5428
       },
-      "recovery_mean": 0.724385936666725,
-      "recovery_sd": 0.012348442190159037,
+      "recovery_mean": 0.6966824867071434,
+      "recovery_sd": 0.01342800088016662,
       "replications": 12
     },
     "largest_cause": {
       "confusion": {
         "carrier->transit": 4334,
         "infeasible_plan->infeasible_plan": 1405,
-        "missed_cutoff->release_to_depart": 4249,
-        "warehouse->order_to_release": 391,
-        "warehouse->release_to_depart": 5037
+        "missed_cutoff->order_to_release": 122,
+        "missed_cutoff->release_to_depart": 4740,
+        "warehouse->order_to_release": 3696,
+        "warehouse->release_to_depart": 1732
       },
-      "recovery_mean": 0.6731393527686297,
-      "recovery_sd": 0.012636881078774516,
+      "recovery_mean": 0.8843353706673249,
+      "recovery_sd": 0.00766059503968579,
       "replications": 12
     },
     "proportional": {
       "confusion": {
         "carrier->transit": 4334,
         "infeasible_plan->infeasible_plan": 1405,
-        "missed_cutoff->release_to_depart": 4249,
-        "warehouse->order_to_release": 391,
-        "warehouse->release_to_depart": 5037
+        "missed_cutoff->order_to_release": 122,
+        "missed_cutoff->release_to_depart": 4740,
+        "warehouse->order_to_release": 3696,
+        "warehouse->release_to_depart": 1732
       },
-      "recovery_mean": 0.6731393527686297,
-      "recovery_sd": 0.012636881078774516,
+      "recovery_mean": 0.8843353706673249,
+      "recovery_sd": 0.00766059503968579,
       "replications": 12
     }
   },
@@ -46,5 +48,5 @@
     "largest_cause": "warehouse",
     "proportional": "warehouse"
   },
-  "worst_recovery_mean": 0.6731393527686297
+  "worst_recovery_mean": 0.6966824867071434
 }

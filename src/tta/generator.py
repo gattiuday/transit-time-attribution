@@ -99,9 +99,25 @@ def generate_log(
             # release lateness itself is the story.
             overrun = int(rng.uniform(6.0, 20.0) * 3600)
         elif cause == "missed_cutoff":
-            # Just enough to miss the last departure. Minutes.
-            latest_in_time = next_departure(planned_release, lane) - DEPART_FLOOR_SECONDS
-            overrun = max(60, latest_in_time - planned_release + int(rng.uniform(60, 2_400)))
+            # Just enough to miss the departure an on plan release would have
+            # caught. Minutes.
+            #
+            # The bound here was `next_departure(planned_release, lane)`, which
+            # omits the handling floor and so names a departure the shipment was
+            # never going to catch. Where the lane's departures are spaced more
+            # closely than the floor, that bound fell below the planned release,
+            # the overrun went negative, and `max(60, ...)` clamped it to a
+            # minute: a shipment released one minute late, missing nothing, and
+            # labelled `missed_cutoff`. It affected 35 of 272 such labels on the
+            # committed fixture, all on the three departure lane, and the
+            # grading test that should have caught it filtered them out because
+            # they were not late. The clamp is gone with the bug, because a
+            # clamp that silently rescues an impossible value is how the label
+            # stayed false through two label audits.
+            latest_in_time = (
+                next_departure(planned_release + DEPART_FLOOR_SECONDS, lane) - DEPART_FLOOR_SECONDS
+            )
+            overrun = latest_in_time - planned_release + int(rng.uniform(60, 2_400))
         elif cause == "infeasible_plan":
             # Must not overrun any stage: the planted cause is that the plan
             # itself never reached the promise. Releasing a little early
@@ -155,4 +171,86 @@ def generate_log(
                 committed_transit=committed_transit,
             ).validate()
         )
-    return log, [str(cause) for cause in planted]
+    causes = [str(cause) for cause in planted]
+    verify_labels(log, causes)
+    return log, causes
+
+
+def label_is_true(shipment: Shipment, cause: str) -> str | None:
+    """Why `cause` is false for `shipment`, or None if it holds.
+
+    Three planted labels in this generator have been wrong, each found by a
+    confusion matrix rather than by a test, and each time the tool was right
+    and the label was not. A grader cannot be trusted further than the ground
+    truth it grades against, so the ground truth is checked here against the
+    event log it produced, every time one is produced.
+
+    What each label asserts is narrower than it looks, and getting that wrong in
+    either direction plants a false label. An execution label names a stage that
+    ran over its plan. It does not claim the delivery was late, because the
+    promise carries a buffer and a lane with three departures a day absorbs a
+    good deal: the first version of this check demanded lateness of `warehouse`
+    and `carrier` and found 26 shipments that overran and arrived on time. Those
+    labels are true and the absorption is Claim 2's finding, not a defect.
+
+    `infeasible_plan` is about the plan and not the outcome either, for the same
+    reason: it asserts the promise was shorter than the plan it was made
+    against, and execution can still beat a plan by enough to land on time. One
+    shipment in four thousand does, by catching an earlier departure than the
+    plan assumed and running under the committed transit. Demanding lateness
+    here would have meant widening the generator's infeasibility margin until
+    the label came true, which is tuning the ground truth to fit the check.
+
+    `none` is the one label that constrains the outcome, because it is the one
+    that claims nothing happened: nothing ran over and the delivery was on time.
+    A `none` shipment that drifted past a cutoff really did miss it.
+    """
+    lane = lanes_by_name()[shipment.lane]
+    on_plan_depart = next_departure(shipment.planned_release + DEPART_FLOOR_SECONDS, lane)
+    released_over = shipment.released > shipment.planned_release
+    missed = shipment.ship_confirm > on_plan_depart
+    transit_over = shipment.stage_durations["transit"] > shipment.committed_transit
+    feasible = shipment.promised_delivery >= on_plan_depart + shipment.committed_transit
+    late = shipment.delivery_lateness > 60
+
+    if cause == "none":
+        if released_over or missed or transit_over:
+            return "a stage ran over its plan"
+        if late:
+            return "delivered late"
+    elif cause == "warehouse":
+        if not released_over:
+            return "the release did not overrun"
+    elif cause == "missed_cutoff":
+        if not released_over:
+            return "the release did not overrun"
+        if not missed:
+            return "no departure was missed"
+    elif cause == "carrier":
+        if not transit_over:
+            return "the transit did not overrun"
+        if released_over or missed:
+            return "an upstream stage ran over its plan too"
+    elif cause == "infeasible_plan":
+        if feasible:
+            return "the plan did reach the promise"
+        if released_over or missed or transit_over:
+            return "a stage ran over its plan"
+    else:  # pragma: no cover - guarded by the cause mix validation above
+        return f"unknown cause '{cause}'"
+    return None
+
+
+def verify_labels(log: list[Shipment], causes: list[str]) -> None:
+    """Refuse to hand back a log whose own ground truth is false."""
+    wrong = [
+        (shipment.shipment_id, cause, reason)
+        for shipment, cause in zip(log, causes, strict=True)
+        if (reason := label_is_true(shipment, cause)) is not None
+    ]
+    if wrong:
+        shown = "; ".join(f"{name} labelled {cause}: {reason}" for name, cause, reason in wrong[:5])
+        raise AttributionError(
+            f"{len(wrong)} of {len(log)} planted labels are false, so this log cannot "
+            f"grade anything. {shown}"
+        )

@@ -29,7 +29,7 @@ warehouse, which no carrier will sign. It also still produces one number with no
 attribution inside it.
 
 The problem is not that the window is too narrow. It is that one number cannot carry three
-causes. On this log, 71.9% of late deliveries were caused by a stage that ends before ship
+causes. On this log, 73.0% of late deliveries were caused by a stage that ends before ship
 confirm, and the same share arrives with the carrier inside its committed window, so every
 one of them is recorded as a carrier success. Widening the window changes who gets blamed.
 It does not say who should be.
@@ -54,8 +54,8 @@ against a mislabelled fixture grades the generator, not the tool.
 
 That the attribution cannot name a single cause reliably, and no version of it will.
 
-The best convention recovers 72.4% of planted causes and the worst is down to 67.3%. The
-reason is structural: 62.8% of late deliveries have more than one stage over plan, because
+The best convention recovers 88.4% of planted causes and the worst is down to 69.7%. The
+reason is structural: 87.4% of late deliveries have more than one stage over plan, because
 a release that overran by six hours has also missed the day's last departure. Both stages
 are over plan. Both statements are true. `first_cause` recovers every warehouse overrun
 and blames missed cutoffs on the warehouse too; `largest_cause` recovers every missed
@@ -86,7 +86,7 @@ a shipment can be re-planned onto a different service has no single departure it
 caught, and the charge is undefined there.
 
 And the absolute shares follow from the planted cause mix. That the upstream share is not
-zero, and not visible from a scorecard, is general. That it is 71.9% is a fact about this
+zero, and not visible from a scorecard, is general. That it is 73.0% is a fact about this
 log.
 
 ### 5. "Walk me through a bug you found."
@@ -122,33 +122,38 @@ they would be least likely to find it.
 
 I also went looking for a stronger claim and did not find it. I expected that fixing the
 attribution would change which carrier looks worst, the "you fired the wrong carrier"
-finding. On this fixture the lane with the worst delivered service also has the worst
-carrier, so that claim is not supported and is not made. What the measurement does support
-is weaker and better: carriers on lanes with different departure frequency are not
-comparable at all.
+finding. The lane ordering does invert, and for a while I had the inversion in the README
+and its denial in this document, each written as though measured. Neither was. The carrier
+caused rate differs across the three lanes by 0.2 points while the standard error of any
+one lane's mean is 0.3, so there is no ordering there to invert or to deny, and the honest
+report is that the question is below the resolution of the measurement. What the
+measurement does support is sharper than the claim I wanted: delivered service is
+resolvable at thirty times its standard error and carrier performance is not resolvable at
+all, so a scorecard that prints the two side by side is reporting one measurement and one
+artefact in the same typeface.
 
 Next, in order: more lanes so the comparability finding becomes a correlation rather than
 three rows; out of order timestamps in the generator so the selection effect becomes
-measurable; and promise setting as its own stage, since infeasible plans are 11.6% of late
+measurable; and promise setting as its own stage, since infeasible plans are 11.2% of late
 late deliveries here and the tool currently says only that the plan was the problem.
 
 ## Numbers I should know cold
 
-- **71.9% of late deliveries** were caused by a stage that ends before ship confirm, with
-  an sd of 0.96 points across twelve logs. The same share arrive with the carrier inside
+- **73.0% of late deliveries** were caused by a stage that ends before ship confirm, with
+  an sd of 0.98 points across twelve logs. The same share arrive with the carrier inside
   its window.
-- The scorecard is right **92.6% of the time** about what it flags and **sees 28.1%** of
+- The scorecard is right **92.6% of the time** about what it flags and **sees 27.0%** of
   the late deliveries. Precise and blind is the harder failure to notice.
-- **62.8% of late deliveries have** more than one stage over plan, which is why the best
-  convention only **recovers 72.4%** of planted causes and the worst is **down to 67.3%**.
-- A single departure lane runs **36.8% late on** delivered service against **22.8% on the three**
-  departure lane, with identical carriers, and the carrier accounts for **24.4% of
-  its own lateness** there against **40.1% on the lane with three**.
+- **87.4% of late deliveries have** more than one stage over plan, which is why the best
+  convention only **recovers 88.4%** of planted causes and the worst is **down to 69.7%**.
+- A single departure lane runs **36.8% late on** delivered service against **26.6% on the three**
+  departure lane, with identical carriers, and the carrier's share of lateness
+  **runs 24.4% on the single departure** lanes against **34.3% on the lane with three**.
 - A daily clock **loses 51% of** the late deliveries and the rounding rule alone **swings
-  the count by 54%**. An hourly clock **shifts it by 0.11 points**.
+  the count by 51%**. An hourly clock **shifts it by 0.03 points**.
 - At 250 shipments the scorecard **flags 21 shipments**, a **floor of 5.09%**, and the
   precision claim needs about 2000 shipments to separate.
-- **181 tests**, **100% line coverage**, over a fixture of **2000 shipments** across
+- **212 tests**, **100% line coverage**, over a fixture of **2000 shipments** across
   **3 lanes**.
 
 ## If someone says this is just event log analysis

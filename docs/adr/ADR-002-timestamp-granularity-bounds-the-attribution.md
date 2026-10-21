@@ -27,8 +27,8 @@ Because it is not neutral, and the measurement says so. Flooring every milestone
 release earlier, which hides a near miss. Rounding to nearest moves half of them later,
 which invents one.
 
-On a daily clock those two choices produce 631 and 970 late shipments from the same
-underlying data, and an upstream share of 63.9% against 75.5%. That is a 54% difference in
+On a daily clock those two choices produce 642 and 970 late shipments from the same
+underlying data, and an upstream share of 90.1% against 75.5%. That is a 51% difference in
 the headline count, decided by a convention that no transport system records anywhere.
 
 `experiments/exp04` publishes the whole table, including the result that an hourly clock
