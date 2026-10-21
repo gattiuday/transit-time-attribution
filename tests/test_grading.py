@@ -16,7 +16,7 @@ import pytest
 from conftest import EXPECTED_CAUSE
 
 from tta.attribute import attribute_log
-from tta.config import next_departure
+from tta.config import LANES, next_departure
 from tta.errors import AttributionError
 from tta.generator import (
     DEPART_FLOOR_SECONDS,
@@ -72,17 +72,67 @@ def test_an_infeasible_plan_is_not_blamed_on_an_operation():
 
 
 def test_a_warehouse_overrun_is_attributed_to_the_warehouse_under_first_cause():
-    graded = _graded("first_cause")
-    warehouse = [row for planted, row in graded if planted == "warehouse"]
+    """True by construction under this convention, and kept for the second half.
+
+    `first_cause` returns the first stage in `STAGES` with a positive overrun
+    and `order_to_release` is first, so for a planted warehouse overrun this
+    assertion tests tuple ordering. An audit said so and it is right. What is
+    not true by construction is that the same shipments are attributed upstream
+    under the other convention as well, which is the claim the README makes, so
+    that is asserted here too and it is the part that can fail.
+    """
+    warehouse = [row for planted, row in _graded("first_cause") if planted == "warehouse"]
     assert warehouse
     assert all(row.cause == "order_to_release" for row in warehouse)
 
+    under_largest = {
+        row.shipment_id: row.cause
+        for planted, row in _graded("largest_cause")
+        if planted == "warehouse"
+    }
+    assert all(
+        under_largest[row.shipment_id] in ("order_to_release", "release_to_depart")
+        for row in warehouse
+    ), "a planted warehouse overrun was attributed outside the two upstream stages"
+
 
 def test_no_shipment_planted_as_on_plan_is_reported_late():
-    """If one were, the generator's label would be false and every recovery rate
-    in this repository would be grading the generator rather than the tool."""
+    """A tautology against this generator, which is the reason to say so here.
+
+    A `none` shipment is released on or before plan, runs under its committed
+    transit, and carries a promise with positive slack, so arriving late is
+    algebraically impossible. The assertion cannot fail, and an audit was right
+    to call that out: a test whose docstring sells it as a guard that caught a
+    real defect, against a generator that cannot produce the defect, is a test
+    that only looks like evidence.
+
+    It stays because the generator can change and the property is one a change
+    could break. What makes it evidence is the mutation below: the same check is
+    run against a shipment constructed to violate it, so the assertion is shown
+    to be capable of failing even though the fixture never makes it fail.
+    """
     graded = _graded("largest_cause")
     assert not [row for planted, row in graded if planted == "none"]
+
+    # The same property, against a log that does violate it.
+    lane = LANES[0]
+    planned = 6 * 3600
+    depart = next_departure(planned + DEPART_FLOOR_SECONDS, lane)
+    committed = lane.committed_transit_days * 86_400
+    late_but_on_plan = Shipment(
+        shipment_id="SHP-LATE-ON-PLAN",
+        lane=lane.name,
+        order_created=0,
+        released=planned,
+        ship_confirm=depart,
+        delivered=depart + committed,
+        promised_delivery=depart + committed - 2 * 3600,
+        planned_release=planned,
+        committed_transit=committed,
+    )
+    summary, _ = attribute_log([late_but_on_plan], lanes_by_name(), DEPART_FLOOR_SECONDS)
+    assert summary.late == 1
+    assert label_is_true(late_but_on_plan, "none") == "delivered late"
 
 
 @pytest.mark.parametrize("convention", ["first_cause", "largest_cause", "proportional"])

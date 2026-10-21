@@ -93,8 +93,52 @@ def test_a_measured_zero_is_reported_as_below_its_floor():
     assert rate.floor == pytest.approx(1 / 34)
 
 
-def test_the_sample_needed_to_separate_a_claim_is_arithmetic():
-    assert rate_with_floor(100, 100, 0.95).samples_needed() == 20
+def test_the_sample_needed_to_separate_a_claim_agrees_with_supported():
+    """The property `samples_needed` exists to predict, checked against it.
+
+    This asserted a literal 20, which was `1 / gap` and inverted the granularity
+    floor rather than the constraint that actually binds. A perfect rate claimed
+    five points lower is not separable at twenty observations: the Wilson
+    interval there is about twenty points wide. The answer and the predicate
+    have to agree, so the test asks whether they do rather than restating one of
+    them as a constant.
+    """
+    rate = rate_with_floor(100, 100, 0.95)
+    needed = rate.samples_needed()
+    assert not rate_with_floor(needed - 1, needed - 1, 0.95).supported
+    assert rate_with_floor(needed, needed, 0.95).supported
+
+
+def test_the_granularity_floor_is_never_the_binding_constraint_on_these_samples():
+    """One over n is a statement about granularity, not about sampling error.
+
+    Treating it as an interval is the defect an audit found: at 21 flagged
+    shipments it calls a five point gap resolved while the sampling error alone
+    is nearly eight points. The floor is kept, because a difference below 1/n
+    genuinely cannot be expressed, and the wider of the two is what decides.
+    """
+    for numerator, denominator in ((21, 21), (19, 21), (93, 100), (232, 250), (1852, 2000)):
+        rate = rate_with_floor(numerator, denominator, 0.95)
+        assert rate.sampling_half_width > rate.floor
+        assert rate.resolution == rate.sampling_half_width
+
+
+def test_a_perfect_rate_still_has_an_interval():
+    """Why Wilson and not the normal approximation.
+
+    At 21 of 21 the normal interval is sqrt(p(1-p)/n) = 0, which would declare a
+    sample of twenty one flags able to resolve anything at all.
+    """
+    rate = rate_with_floor(21, 21, 0.95)
+    assert rate.rate == 1.0
+    assert rate.sampling_half_width > 0.07
+    assert not rate.supported
+
+
+def test_an_unresolvable_gap_is_refused_rather_than_searched_forever():
+    rate = rate_with_floor(950_001, 1_000_000, 0.95)
+    with pytest.raises(AttributionError, match="too small to resolve"):
+        rate.samples_needed()
 
 
 def test_a_claim_exactly_equal_to_the_measurement_cannot_be_separated():

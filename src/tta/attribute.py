@@ -94,7 +94,7 @@ def stage_lateness(shipment: Shipment, lane: Lane, handling_seconds: int) -> dic
     computed rather than asserted.
     """
     counterfactual = next_departure(shipment.planned_release + handling_seconds, lane)
-    order_to_release = shipment.released - shipment.planned_release
+    order_to_release = shipment.release_lateness
     displacement = shipment.ship_confirm - counterfactual
     return {
         "order_to_release": order_to_release,

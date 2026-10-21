@@ -29,8 +29,15 @@ Properties of the arithmetic and of the lifecycle, identical against real data:
   deliveries have more than one stage over plan. Structural.
 - **A coarser clock loses the attribution silently.** It reports fewer late shipments
   rather than an error.
-- **The resolution floor arithmetic.** A rate over 21 flagged shipments cannot separate a
-  perfect rate from one five points below it, whatever the flags were.
+- **The resolution arithmetic.** A rate over 21 flagged shipments cannot separate a perfect
+  rate from one five points below it, whatever the flags were. This entry used to read "the
+  resolution floor arithmetic" and the floor was one over the sample size, which is a
+  statement about what a rate can express and not about sampling error. An audit pointed
+  out that it is far narrower than a confidence interval and that the module was using it
+  as though it were one: at 21 flags it put the floor at 5.09% while the Wilson interval is
+  12.50%. Both are published now and the wider one decides, which moved the sample the
+  claim needs from roughly 2000 shipments to 8000. What the fixture establishes is the
+  arithmetic, not either bound's adequacy for a particular decision.
 - **The exit code contract.** Behavioural.
 
 ## Claims the fixture establishes only conditionally

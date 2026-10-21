@@ -361,3 +361,110 @@ def test_a_mixed_run_refuses_rather_than_warning(monkeypatch, tmp_path):
         _read_suite_with(monkeypatch, tmp_path, junit)
     assert "test_the_report_quotes_the_convention" in str(caught.value)
     assert "test_the_checker_passes" not in str(caught.value)
+
+
+# --------------------------------------------------------------------------
+# Corrupting one published figure into another published figure's value.
+#
+# This is the class the reverse check was twice written to stop and twice
+# failed to. The first version asked whether a number was anywhere in the set
+# of published values. The second asked whether an anchor for that value
+# matched on that line, which is a hole wherever two anchored figures share a
+# line: either could be replaced by the other and an anchor for the result was
+# still present. An audit demonstrated it on the README's first sentence.
+# --------------------------------------------------------------------------
+
+
+def _lines_with_two_published_figures(document: str) -> list[tuple[int, str, str]]:
+    """Lines quoting at least two different published values, with that pair."""
+    payload = _payload()
+    published = {
+        value
+        for metric, value in payload["formatted"].items()
+        if metric not in payload.get("badge_only", [])
+    }
+    body = check_numbers.strip_generated_blocks(payload, document, (ROOT / document).read_text())
+    out = []
+    for line in body.split("\n"):
+        found = [value for value in check_numbers.NUMBER.findall(line) if value in published]
+        distinct = sorted(set(found))
+        if len(distinct) >= 2:
+            out.append((len(out), distinct[0], distinct[1]))
+    return out
+
+
+@pytest.mark.parametrize("document", ["README.md", "docs/defense-guide.md"])
+def test_swapping_one_published_figure_for_another_on_the_same_line_fails(tmp_path, document):
+    """Every line that quotes two published figures, corrupted both ways.
+
+    Not one example. The audit found this on the first sentence of the README
+    and the natural fix is to test that sentence, which would leave every other
+    shared line open.
+    """
+    pairs = _lines_with_two_published_figures(document)
+    assert pairs, f"{document} quotes no line with two published figures, so this proves nothing"
+
+    survivors = []
+    for index, (_, first, second) in enumerate(pairs):
+        for original, replacement in ((first, second), (second, first)):
+            root = _sandbox(tmp_path / f"case{index}{original}{replacement}")
+            target = root / document
+            body = target.read_text()
+            lines = body.split("\n")
+            hits = [i for i, line in enumerate(lines) if original in line and second in line]
+            if not hits:
+                continue
+            line_index = hits[0]
+            lines[line_index] = lines[line_index].replace(original, replacement, 1)
+            target.write_text("\n".join(lines))
+            if _run(root) == 0:
+                survivors.append((document, line_index + 1, original, replacement))
+
+    assert not survivors, (
+        "corrupting a published figure into another published figure's value left the "
+        f"build green at: {survivors}"
+    )
+
+
+def test_the_readme_headline_cannot_be_swapped_for_the_precision(tmp_path):
+    """The audit's exact case, kept by name so a regression is recognisable.
+
+    The first sentence quotes the upstream share and the scorecard precision.
+    Replacing the first with the second was reported as passing a green build.
+    """
+    payload = _payload()
+    upstream = payload["formatted"]["upstream_share_pct"]
+    precision = payload["formatted"]["scorecard_precision_pct"]
+    root = _sandbox(tmp_path / "headline")
+    readme = root / "README.md"
+    body = readme.read_text()
+    assert f"{upstream}% of late deliveries" in body
+    readme.write_text(body.replace(f"{upstream}%", f"{precision}%", 1))
+    assert _run(root) != 0, "the README headline can still be swapped for another published figure"
+
+
+@pytest.mark.parametrize(
+    "metric", ["upstream_share_sd", "scorecard_precision_sd", "upstream_share_pct"]
+)
+def test_deleting_a_published_figure_fails_the_build(tmp_path, metric):
+    """Removing a figure from the prose, rather than changing it.
+
+    This passed. The forward check requires a metric only in a document that
+    mentions its value, so a figure deleted from every document was required of
+    none, and an audit removed a published standard deviation from both the
+    README and the defense guide with the build staying green. A receipts system
+    whose stated uncertainty can be dropped silently is not reporting
+    uncertainty, so the standard deviations are the cases named here.
+    """
+    value = _payload()["formatted"][metric]
+    root = _sandbox(tmp_path / f"delete-{metric}")
+    removed = 0
+    for name in _payload()["checked_documents"]:
+        target = root / name
+        body = target.read_text()
+        if value not in body:
+            continue
+        target.write_text(body.replace(value, "some number"))
+        removed += 1
+    assert removed, f"{metric} is quoted nowhere, so this test proves nothing"
+    assert _run(root) != 0, f"{metric} can be deleted from the prose with the build green"

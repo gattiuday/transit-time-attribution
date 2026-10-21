@@ -10,7 +10,7 @@ sample size can distinguish, and the sample it would take to separate the
 measured precision from the claim a transport team would make from it.
 
 The uncomfortable part is at the top of the table. A scorecard that flags four
-shipments and is right about all four has a measured precision of 100%, and a
+shipments and is right about all four has a perfect measured precision, and a
 sample that cannot tell that apart from three in four.
 """
 
@@ -23,8 +23,11 @@ from tta.attribute import attribute_log
 from tta.generator import DEPART_FLOOR_SECONDS, generate_log, lanes_by_name
 from tta.resolution import rate_with_floor
 
-#: Shipment counts a single lane might contribute to a monthly review.
-SAMPLE_SIZES = (250, 500, 1_000, 2_000, 4_000)
+#: Shipment counts a single lane might contribute to a monthly review, extended
+#: upward because the honest interval is not cleared anywhere in the original
+#: range. The first three are the realistic ones; the rest are what it would
+#: actually take.
+SAMPLE_SIZES = (250, 500, 1_000, 2_000, 4_000, 8_000, 16_000, 32_000)
 
 #: What a transport team would claim from a high measured precision.
 CLAIM = 0.95
@@ -33,7 +36,7 @@ CLAIM = 0.95
 def main() -> None:
     rows, series = [], []
     for shipments in SAMPLE_SIZES:
-        flagged, precisions, supported = [], [], 0
+        flagged, precisions, resolutions, needed, supported = [], [], [], [], 0
         for replication in range(REPLICATIONS):
             log, _ = generate_log(shipments, seed=20261021 + 97 * replication)
             summary, _ = attribute_log(log, lanes_by_name(), DEPART_FLOOR_SECONDS)
@@ -42,6 +45,8 @@ def main() -> None:
             )
             flagged.append(rate.denominator)
             precisions.append(rate.rate)
+            resolutions.append(rate.resolution)
+            needed.append(rate.samples_needed())
             supported += int(rate.supported)
         series.append(
             {
@@ -49,6 +54,7 @@ def main() -> None:
                 "flagged_mean": float(np.mean(flagged)),
                 "precision_mean": float(np.mean(precisions)),
                 "resolution_floor_mean": float(np.mean([1 / n for n in flagged])),
+                "resolution_mean": float(np.mean(resolutions)),
                 "claim_supported_share": supported / REPLICATIONS,
             }
         )
@@ -58,13 +64,25 @@ def main() -> None:
                 f"{np.mean(flagged):.0f}",
                 f"{np.mean(precisions):.1%}",
                 f"{np.mean([1 / n for n in flagged]):.2%}",
+                f"{np.mean(resolutions):.2%}",
                 f"{supported / REPLICATIONS:.0%}",
             )
         )
 
-    smallest_supported = next(
-        (row["shipments"] for row in series if row["claim_supported_share"] >= 0.8), None
-    )
+    # The smallest size from which the claim is supported and stays supported.
+    # Taking the first crossing of a noisy share was the previous answer and it
+    # landed on a 12 of 12 immediately followed by an 11 of 12, which is one log
+    # of difference published as a threshold.
+    smallest_supported = None
+    for index, row in enumerate(series):
+        if all(later["claim_supported_share"] >= 0.8 for later in series[index:]):
+            smallest_supported = row["shipments"]
+            break
+
+    # What the arithmetic says, independent of how the sweep happened to land.
+    # `samples_needed` is deterministic given a rate and a claim, so this is the
+    # figure to quote and the sweep is the demonstration.
+    flags_needed = int(np.median(needed))
     emit(
         "exp05_resolution_floor",
         {
@@ -73,6 +91,7 @@ def main() -> None:
             "replications": REPLICATIONS,
             "series": series,
             "smallest_sample_supporting_the_claim": smallest_supported,
+            "flags_needed_to_separate_the_claim": flags_needed,
             "floor_at_smallest_sample": series[0]["resolution_floor_mean"],
             "flagged_at_smallest_sample": series[0]["flagged_mean"],
             "note": (
@@ -83,7 +102,7 @@ def main() -> None:
             ),
         },
         rows,
-        ("shipments", "flagged", "precision", "resolution floor", "claim separable"),
+        ("shipments", "flagged", "precision", "granularity", "resolution", "claim separable"),
     )
 
 

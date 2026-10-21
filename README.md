@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml/badge.svg)](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)
-![Tests](https://img.shields.io/badge/tests-212-brightgreen)
+![Tests](https://img.shields.io/badge/tests-221-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -51,11 +51,13 @@ Measured across twelve independent event logs of 4,000 shipments each:
   88.4% of planted causes and the worst is down to 69.7%.
 - **A daily clock loses 52% of the late deliveries outright**, and the rounding rule alone
   swings the count by 51%. Nothing errors. The operation simply looks better than it is.
-- **In a 250 shipment sample the scorecard flags 21 shipments**, a resolution floor of
-  5.09%, which cannot separate its measured precision from a claim five points away. It
-  needs about 2000 shipments to resolve.
+- **In a 250 shipment sample the scorecard flags 21 shipments**, a granularity floor of
+  5.09% and a sampling interval that cannot resolve anything below 12.50%. The precision
+  claim needs 316 flagged shipments to separate from a claim five points away, which on a
+  single lane means 8000 shipments before it holds across most months. The floor alone used
+  to be the whole answer here and it is the narrower half of it: see ADR-005.
 
-212 tests, 100% line coverage, and every figure above is re-measured by CI and checked
+221 tests, 100% line coverage, and every figure above is re-measured by CI and checked
 against this document in both directions on every push.
 
 ## Quickstart
@@ -234,7 +236,7 @@ with its exit code.
 
 ## What is in the fixture
 
-2000 shipments across 3 lanes, generated with the cause of each late delivery written
+2000 shipments across three lanes, generated with the cause of each late delivery written
 down, because the quantity this tool produces is the one no transport system records.
 There is no real log with a labelled answer, so grading the attribution at all requires
 planting one.
@@ -302,9 +304,12 @@ data/fixtures/   the committed event log and its planted causes
 | 3 | usage error |
 
 1 and 2 are distinct on purpose. A transport team wiring this into a carrier review needs
-to read the report on 1 and fix the data on 2. The distinction is carried by the exception
-type rather than inferred from the exception class, so `UnattributableShipment` subclasses
-both `AttributionError` and `ValueError` and the handler reads the author's intent.
+to read the report on 1 and fix the data on 2. The distinction is declared where the
+exception is raised rather than recovered from the message or the call site, so
+`UnattributableShipment` subclasses both `AttributionError` and `ValueError`, and the
+handler's `except` order resolves it to the exit code the author meant. An earlier version
+of this paragraph said the distinction was carried by the type rather than inferred from
+the class, which in Python is the same sentence twice.
 
 ## Make targets
 
@@ -331,7 +336,7 @@ their cells cannot be guarded by phrases.
 | Python 3.11+ | everything | `itertools.pairwise` is how the timestamp ordering check reads as the invariant it is rather than as index arithmetic |
 | numpy | the generator and the replication statistics | the cause mix is a weighted draw over thousands of shipments, which is one call and a loop otherwise |
 | pandas | reading and writing event logs | a CSV with a header is what a transport team can actually export from a TMS |
-| pytest | 212 tests | parametrising over three conventions and four clock granularities is how the convention findings are pinned without a copy of each test |
+| pytest | 221 tests | parametrising over three conventions and four clock granularities is how the convention findings are pinned without a copy of each test |
 | ruff | lint and format | one tool, so a contributor cannot pass lint and fail format |
 | GitHub Actions | re-measurement | the numbers in this README are only trustworthy if something recomputes them without being asked |
 

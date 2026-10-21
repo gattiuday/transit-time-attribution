@@ -21,11 +21,7 @@
       "spread across conventions measures {} points"
     ],
     "coverage_line_pct": [
-      "{}% line coverage",
-      "{}% over eleven",
-      "that cannot tell {}% from 75%.",
-      "{}% from 95%,",
-      "measured precision of {}%, and a sample"
+      "{}% line coverage"
     ],
     "daily_clock_late_loss_pct": [
       "loses {}% of"
@@ -53,15 +49,17 @@
       "plans are {}% of",
       "{}% of the late"
     ],
-    "fixture_lanes": [
-      "{} lanes"
-    ],
     "fixture_shipments": [
       "{} shipments"
     ],
     "flagged_at_small_sample": [
       "flags {} shipments",
-      "A rate over {} flagged"
+      "A rate over {} flagged",
+      "rate over {} flagged shipments cannot separate a perfect",
+      "at {} flags it put the"
+    ],
+    "flags_needed_to_separate_the_claim": [
+      "needs {} flagged shipments"
     ],
     "hourly_clock_shift_points": [
       "shifts it by {} points"
@@ -105,7 +103,12 @@
       "from {}% to 88.4%"
     ],
     "resolution_floor_small_pct": [
-      "floor of {}%"
+      "granularity floor of {}%",
+      "floor at {}% while"
+    ],
+    "resolution_small_pct": [
+      "resolve anything below {}%",
+      "Wilson interval is\n  {}%"
     ],
     "scorecard_precision_pct": [
       "{}% of the time",
@@ -134,18 +137,14 @@
       "against {}% on the lane with three",
       "shows {}% on the three"
     ],
-    "single_lane_worst_late_pct": [
-      "late against 36.4% and {}%. The mechanism"
-    ],
     "small_sample_shipments": [
       "In a {} shipment sample",
       "At {} shipments the"
     ],
     "smallest_supporting_sample": [
-      "about {} shipments",
-      "needs about {} shipments",
-      "needs about {} shipments to resolve",
-      "needs about {} shipments to separate"
+      "means {} shipments before it holds",
+      "which is {} shipments on one lane",
+      "roughly 2000 shipments to {}"
     ],
     "stage_share_pct": [
       "into {}% caused by a stage"
@@ -219,6 +218,7 @@
     "experiment_shipments": "{:,.0f}",
     "fixture_infeasible_share_pct": "{:.1f}",
     "flagged_at_small_sample": "{:.0f}",
+    "flags_needed_to_separate_the_claim": "{:d}",
     "hourly_clock_shift_points": "{:.2f}",
     "infeasible_share_pct": "{:.1f}",
     "late_rate_spread_points": "{:.1f}",
@@ -231,13 +231,13 @@
     "python_min_version": "{:.2f}",
     "recovery_under_double_charge_pct": "{:.1f}",
     "resolution_floor_small_pct": "{:.2f}",
+    "resolution_small_pct": "{:.2f}",
     "scorecard_precision_pct": "{:.1f}",
     "scorecard_precision_sd": "{:.2f}",
     "scorecard_recall_pct": "{:.1f}",
     "single_departure_carrier_share_pct": "{:.1f}",
     "single_departure_late_pct": "{:.1f}",
     "single_lane_best_late_pct": "{:.1f}",
-    "single_lane_worst_late_pct": "{:.1f}",
     "stage_share_pct": "{:.1f}",
     "upstream_share_pct": "{:.1f}",
     "upstream_share_sd": "{:.2f}",
@@ -259,9 +259,9 @@
     "daily_nearest_upstream_pct": "75.5",
     "experiment_shipments": "4,000",
     "fixture_infeasible_share_pct": "11.2",
-    "fixture_lanes": "3",
     "fixture_shipments": "2000",
     "flagged_at_small_sample": "21",
+    "flags_needed_to_separate_the_claim": "316",
     "hourly_clock_shift_points": "0.03",
     "infeasible_share_pct": "8.8",
     "late_rate_spread_points": "10.5",
@@ -274,17 +274,17 @@
     "python_min_version": "3.11",
     "recovery_under_double_charge_pct": "68.6",
     "resolution_floor_small_pct": "5.09",
+    "resolution_small_pct": "12.50",
     "scorecard_precision_pct": "92.6",
     "scorecard_precision_sd": "1.53",
     "scorecard_recall_pct": "27.0",
     "single_departure_carrier_share_pct": "24.4",
     "single_departure_late_pct": "36.8",
     "single_lane_best_late_pct": "26.6",
-    "single_lane_worst_late_pct": "37.1",
     "small_sample_shipments": "250",
-    "smallest_supporting_sample": "2000",
+    "smallest_supporting_sample": "8000",
     "stage_share_pct": "64.2",
-    "tests_total": "212",
+    "tests_total": "221",
     "upstream_share_pct": "73.0",
     "upstream_share_sd": "0.98",
     "warehouse_planted": "5428",
@@ -304,7 +304,7 @@
     "carrier_rate_spread_points": 0.16301864071714967,
     "carrier_rate_standard_error_points": 0.2597324224935769,
     "convention_spread_points": 0.0,
-    "coverage_line_pct": 100.0,
+    "coverage_line_pct": 99.80276134122288,
     "daily_clock_late_loss_pct": 51.96531070626405,
     "daily_clock_mode_swing_pct": 51.253409533705664,
     "daily_floor_late": 641.5833333333334,
@@ -313,9 +313,9 @@
     "daily_nearest_upstream_pct": 75.49225269900424,
     "experiment_shipments": 4000,
     "fixture_infeasible_share_pct": 11.161387631975868,
-    "fixture_lanes": 3,
     "fixture_shipments": 2000,
     "flagged_at_small_sample": 20.75,
+    "flags_needed_to_separate_the_claim": 316,
     "hourly_clock_shift_points": 0.02740071777661557,
     "infeasible_share_pct": 8.762007053965561,
     "late_rate_spread_points": 10.483870967741932,
@@ -328,17 +328,17 @@
     "python_min_version": 3.11,
     "recovery_under_double_charge_pct": 68.56547711681432,
     "resolution_floor_small_pct": 5.092897655040104,
+    "resolution_small_pct": 12.504906176974268,
     "scorecard_precision_pct": 92.58148678818304,
     "scorecard_precision_sd": 1.5346451114740578,
     "scorecard_recall_pct": 27.033458716524684,
     "single_departure_carrier_share_pct": 24.40290690883799,
     "single_departure_late_pct": 36.767414304850575,
     "single_lane_best_late_pct": 26.644161040260073,
-    "single_lane_worst_late_pct": 37.128032008002,
     "small_sample_shipments": 250,
-    "smallest_supporting_sample": 2000,
+    "smallest_supporting_sample": 8000,
     "stage_share_pct": 64.20453422950973,
-    "tests_total": 212,
+    "tests_total": 221,
     "upstream_share_pct": 72.96654128347532,
     "upstream_share_sd": 0.9767923671307281,
     "warehouse_planted": 5428,

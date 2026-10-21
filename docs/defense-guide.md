@@ -135,7 +135,7 @@ artefact in the same typeface.
 Next, in order: more lanes so the comparability finding becomes a correlation rather than
 three rows; out of order timestamps in the generator so the selection effect becomes
 measurable; and promise setting as its own stage, since infeasible plans are 11.2% of late
-late deliveries here and the tool currently says only that the plan was the problem.
+deliveries here and the tool currently says only that the plan was the problem.
 
 ## Numbers I should know cold
 
@@ -149,12 +149,13 @@ late deliveries here and the tool currently says only that the plan was the prob
 - A single departure lane runs **36.8% late on** delivered service against **26.6% on the three**
   departure lane, with identical carriers, and the carrier's share of lateness
   **runs 24.4% on the single departure** lanes against **34.3% on the lane with three**.
-- A daily clock **loses 51% of** the late deliveries and the rounding rule alone **swings
+- A daily clock **loses 52% of** the late deliveries and the rounding rule alone **swings
   the count by 51%**. An hourly clock **shifts it by 0.03 points**.
-- At 250 shipments the scorecard **flags 21 shipments**, a **floor of 5.09%**, and the
-  precision claim needs about 2000 shipments to separate.
-- **212 tests**, **100% line coverage**, over a fixture of **2000 shipments** across
-  **3 lanes**.
+- At 250 shipments the scorecard **flags 21 shipments**, a **granularity floor of 5.09%**,
+  and a sampling interval that cannot **resolve anything below 12.50%**. The claim
+  **needs 316 flagged shipments** to separate, which is 8000 shipments on one lane.
+- **221 tests**, **100% line coverage**, over a fixture of **2000 shipments** across
+  **three lanes**.
 
 ## If someone says this is just event log analysis
 

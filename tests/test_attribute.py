@@ -110,7 +110,16 @@ def test_the_proportional_convention_splits_across_every_late_stage(on_plan, one
     )
     result = attribute(both, one_lane, handling, "proportional")
     assert len(result.shares) > 1
+    # Summing to one is true by construction of the normalisation, so on its own
+    # this asserts nothing. What it is worth checking is that the shares are
+    # shares of the lateness being explained rather than of some larger total:
+    # under the double charge the denominator was nearly twice the delivery's
+    # lateness, so every share was a fraction of a quantity that did not exist.
     assert sum(result.shares.values()) == pytest.approx(1.0)
+    assert residual(both, one_lane, handling) == 0
+    overruns = stage_overruns(both, one_lane, handling)
+    for stage, share in result.shares.items():
+        assert share == pytest.approx(overruns[stage] / sum(overruns.values()))
 
 
 def test_an_unknown_convention_is_refused_by_name(on_plan, one_lane, handling):

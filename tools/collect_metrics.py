@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tomllib
@@ -38,13 +39,13 @@ EXPERIMENTS = (
 
 ANCHORS: dict[str, list[str]] = {
     "tests_total": ["{} tests"],
-    "coverage_line_pct": [
-        "{}% line coverage",
-        "{}% over eleven",
-        "that cannot tell {}% from 75%.",
-        "{}% from 95%,",
-        "measured precision of {}%, and a sample",
-    ],
+    # Only the coverage claim. This list also carried four phrases guarding
+    # illustrative percentages in `resolution.py` and `exp05` that had nothing
+    # to do with coverage, so a drop to 99% would have demanded that a teaching
+    # example be edited to match, and the run's count of verified figures was
+    # padded with figures attributed to the wrong metric. The illustrations are
+    # written in words now, which is what they always were.
+    "coverage_line_pct": ["{}% line coverage"],
     "upstream_share_pct": [
         "{}% of late deliveries",
         "The {}% upstream",
@@ -114,16 +115,21 @@ ANCHORS: dict[str, list[str]] = {
     "daily_clock_late_loss_pct": ["loses {}% of"],
     "daily_clock_mode_swing_pct": ["swings the count by {}%", "75.5%. That is a {}% difference in"],
     "hourly_clock_shift_points": ["shifts it by {} points"],
-    "resolution_floor_small_pct": ["floor of {}%"],
-    "flagged_at_small_sample": ["flags {} shipments", "A rate over {} flagged"],
+    "resolution_floor_small_pct": ["granularity floor of {}%", "floor at {}% while"],
+    "resolution_small_pct": ["resolve anything below {}%", "Wilson interval is\n  {}%"],
+    "flags_needed_to_separate_the_claim": ["needs {} flagged shipments"],
+    "flagged_at_small_sample": [
+        "flags {} shipments",
+        "A rate over {} flagged",
+        "rate over {} flagged shipments cannot separate a perfect",
+        "at {} flags it put the",
+    ],
     "smallest_supporting_sample": [
-        "about {} shipments",
-        "needs about {} shipments",
-        "needs about {} shipments to resolve",
-        "needs about {} shipments to separate",
+        "means {} shipments before it holds",
+        "which is {} shipments on one lane",
+        "roughly 2000 shipments to {}",
     ],
     "fixture_shipments": ["{} shipments"],
-    "fixture_lanes": ["{} lanes"],
     "python_min_version": ["Python {} or newer. No API", "Python {}+ | everything |"],
     "experiment_shipments": ["logs of {} shipments"],
     "small_sample_shipments": ["In a {} shipment sample", "At {} shipments the"],
@@ -132,7 +138,6 @@ ANCHORS: dict[str, list[str]] = {
     "daily_nearest_late": ["produce 642 and {} late shipments"],
     "daily_floor_upstream_pct": ["an upstream share of {}% against 75.5%."],
     "daily_nearest_upstream_pct": ["share of 90.1% against {}%. That is a 51%"],
-    "single_lane_worst_late_pct": ["late against 36.4% and {}%. The mechanism"],
     "carrier_rate_spread_points": [
         "spread of {} points",
         "caused rate differs across the three lanes by {} points",
@@ -174,9 +179,10 @@ FORMATS: dict[str, str] = {
     "daily_clock_mode_swing_pct": "{:.0f}",
     "hourly_clock_shift_points": "{:.2f}",
     "resolution_floor_small_pct": "{:.2f}",
+    "resolution_small_pct": "{:.2f}",
+    "flags_needed_to_separate_the_claim": "{:d}",
     "flagged_at_small_sample": "{:.0f}",
     "fixture_infeasible_share_pct": "{:.1f}",
-    "single_lane_worst_late_pct": "{:.1f}",
     "single_lane_best_late_pct": "{:.1f}",
     "carrier_rate_spread_points": "{:.1f}",
     "daily_floor_upstream_pct": "{:.1f}",
@@ -304,6 +310,32 @@ def _fixture_cause_share(cause: str) -> float:
     return summary.causes.get(cause, 0) / summary.late
 
 
+#: Documents that quote the test count, which changes on every commit that adds
+#: a test and was corrected by hand each time.
+TEST_COUNT_DOCUMENTS = ("README.md", "docs/defense-guide.md")
+
+
+def sync_test_count(total: int) -> None:
+    """Write the measured test count into the badge and the prose that quote it.
+
+    The count moves whenever a test is added, so every commit that added one
+    also carried three hand edits to keep the badge, the README sentence and the
+    defense guide in step, and a missed edit showed up as a failing receipts
+    check rather than as anything a reader would notice. A figure that has to be
+    typed in three places is a figure that will eventually be wrong in one.
+
+    The substitution is deliberately narrow: a tests badge, and the exact phrase
+    "N tests" where N is some number. Anything looser would rewrite unrelated
+    counts.
+    """
+    for document in TEST_COUNT_DOCUMENTS:
+        path = ROOT / document
+        body = path.read_text()
+        body = re.sub(r"tests-\d+-brightgreen", f"tests-{total}-brightgreen", body)
+        body = re.sub(r"\b\d+ tests\b", f"{total} tests", body)
+        path.write_text(body)
+
+
 def sync_generated_blocks(blocks: dict[str, str]) -> None:
     """Write each generated block into the documents that publish it.
 
@@ -396,13 +428,11 @@ def derive() -> dict[str, float]:
             "daily_clock_mode_swing_pct": (daily_nearest - daily_floor) / daily_floor * 100,
             "hourly_clock_shift_points": clock["upstream_share_shift_at_hourly_points"],
             "resolution_floor_small_pct": floor["floor_at_smallest_sample"] * 100,
+            "resolution_small_pct": floor["series"][0]["resolution_mean"] * 100,
+            "flags_needed_to_separate_the_claim": floor["flags_needed_to_separate_the_claim"],
             "flagged_at_small_sample": floor["flagged_at_smallest_sample"],
             "smallest_supporting_sample": floor["smallest_sample_supporting_the_claim"],
             "fixture_infeasible_share_pct": _fixture_cause_share("infeasible_plan") * 100,
-            "single_lane_worst_late_pct": max(
-                value["late_rate"]["mean"] for value in cutoff["per_lane"].values()
-            )
-            * 100,
             "single_lane_best_late_pct": min(
                 value["late_rate"]["mean"] for value in cutoff["per_lane"].values()
             )
@@ -418,7 +448,6 @@ def derive() -> dict[str, float]:
             "small_sample_shipments": floor["series"][0]["shipments"],
             "experiment_shipments": recovery["shipments_per_log"],
             "fixture_shipments": len(fixture),
-            "fixture_lanes": int(fixture["lane"].nunique()),
             "python_min_version": float(requires.lstrip(">=~^ ")),
         }
     )
@@ -509,6 +538,7 @@ def main() -> int:
     for name, body in blocks.items():
         (GENERATED_DIR / name).write_text(body + "\n")
     sync_generated_blocks(blocks)
+    sync_test_count(int(metrics["tests_total"]))
 
     formatted = {name: FORMATS.get(name, "{}").format(value) for name, value in metrics.items()}
     METRICS_PATH.write_text(

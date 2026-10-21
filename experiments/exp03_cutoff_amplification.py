@@ -38,15 +38,10 @@ def main() -> None:
             bucket["shipments"] += 1
             bucket["late"] += int(row.is_late)
             bucket["carrier_caused"] += int(row.is_late and row.cause == "transit")
-            if row.is_late:
-                bucket["lateness_seconds"] += row.delivery_lateness
         for name, bucket in per_lane.items():
             totals[name]["late_rate"].append(bucket["late"] / bucket["shipments"])
             totals[name]["carrier_rate"].append(bucket["carrier_caused"] / bucket["shipments"])
             totals[name]["carrier_share_of_late"].append(bucket["carrier_caused"] / bucket["late"])
-            totals[name]["mean_lateness_days"].append(
-                bucket["lateness_seconds"] / bucket["late"] / SECONDS_PER_DAY
-            )
 
     rows_out, per_lane_out = [], {}
     for name in (lane.name for lane in LANES):

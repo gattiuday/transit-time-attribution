@@ -40,6 +40,7 @@ import argparse
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -182,12 +183,25 @@ def forward_check(
     #: already skips those regions and the forward check must skip them too, or
     #: a correct document fails because a measured value happens to appear in a
     #: table cell.
-    sites: set[tuple[str, int, str]] = set()
+    sites: Counter[tuple[str, int, str]] = Counter()
     for metric in sorted(anchors):
         phrases = anchors[metric]
         value = formatted.get(metric)
         if value is None:
             failures.append(f"{metric}: anchored but never measured")
+            continue
+        if value in ALLOWED_BARE_NUMBERS and phrases:
+            # Nothing can verify this. The reverse check allows the value
+            # everywhere, so an anchor for it proves only that the phrase is
+            # present, and the figure could be replaced by any other allowed
+            # ordinal without a complaint. Counting it among the verified
+            # figures overstates what is checked, so it is an error to declare
+            # one: either the figure belongs in words, or the ordinal set is
+            # wrong.
+            failures.append(
+                f"{metric}: its value {value} is in the allowed ordinal set, so no anchor "
+                "can verify it; write the figure in words or narrow the ordinal set"
+            )
             continue
         if not phrases:
             # A deliberate opt out, for a value published only on a badge, where
@@ -200,6 +214,7 @@ def forward_check(
             failures.append(f"{metric}: has no anchor phrase, so nothing re-checks the prose")
             continue
         candidates = [flatten(phrase.format(value)) for phrase in phrases]
+        quoted = False
         for name, raw in documents.items():
             # The same body the reverse check reads. Stripping a generated block
             # collapses it to one space and shifts every line number after it,
@@ -211,20 +226,72 @@ def forward_check(
             found = False
             for index, line in enumerate(lines):
                 # An anchor may straddle a line break in wrapped markdown, so
-                # each line is tested together with the next and both are
-                # recorded as sites for the value.
-                window = flatten(line + " " + (lines[index + 1] if index + 1 < len(lines) else ""))
-                if any(candidate in window for candidate in candidates):
-                    sites.add((name, index + 1, value))
-                    sites.add((name, index + 2, value))
-                    found = True
+                # each line is tested together with the next.
+                following = lines[index + 1] if index + 1 < len(lines) else ""
+                # The seam is normalised to exactly one space so that the
+                # window is the concatenation of two known pieces and an offset
+                # inside it can be told which line it came from. Flattening the
+                # join as one string, which is what this did before, leaves the
+                # boundary unrecoverable whenever a wrapped line is indented.
+                head = flatten(line.rstrip())
+                window = head + " " + flatten(following.strip())
+                # Where in the window each matched phrase puts the value. A set
+                # of offsets rather than a count of matches, because the phrase
+                # list is allowed to contain overlapping phrases and often does:
+                # "{}% of the time" and "right {}% of the time" both match the
+                # same text, and summing their counts credited the line with two
+                # anchored occurrences of a value quoted once. That is how the
+                # README headline stayed green when its upstream share was
+                # replaced by the precision quoted later on the same line.
+                offsets = set()
+                for candidate in candidates:
+                    inside = candidate.find(value)
+                    start = window.find(candidate)
+                    while start != -1:
+                        offsets.add(start + inside)
+                        start = window.find(candidate, start + 1)
+                if not offsets:
+                    continue
+                found = True
+                # How many occurrences of this value the matched phrases
+                # account for, and on which of the two lines they sit.
+                #
+                # This used to record the value against both lines and ask only
+                # whether the pair was present, which is a hole wherever two
+                # anchored figures share a line: either could be replaced by
+                # the other and the pair was still present. An audit changed
+                # the README's first sentence from one measured value to a
+                # different measured value and the build stayed green, which is
+                # the failure the docstring below already claimed to have
+                # fixed. Counting occurrences per line closes it, because the
+                # corruption leaves one value appearing more often on that line
+                # than the anchors there account for.
+                boundary = len(head) + 1
+                on_this_line = sum(1 for offset in offsets if offset < boundary)
+                on_next_line = len(offsets) - on_this_line
+                for offset, occurrences in ((1, on_this_line), (2, on_next_line)):
+                    if occurrences:
+                        key = (name, index + offset, value)
+                        sites[key] = max(sites[key], occurrences)
             if found:
+                quoted = True
                 verified.append(f"OK    {metric} = {value}  ({name})")
             elif value in NUMBER.findall(body):
                 failures.append(
                     f"{metric} = {value} appears in {name} but not inside any anchor: "
                     + " | ".join(repr(c) for c in candidates)
                 )
+        if not quoted:
+            # Deleting a figure from the prose passed every check. The forward
+            # check requires a metric only in a document that mentions its
+            # value, so a figure removed everywhere was required of none, and an
+            # audit deleted a published standard deviation from both documents
+            # with the build staying green. A receipts system whose stated
+            # uncertainty can be dropped silently is not reporting uncertainty.
+            failures.append(
+                f"{metric}: measured and anchored but quoted in no checked document, so "
+                "nothing published reports it"
+            )
     return verified, failures, sites
 
 
@@ -245,7 +312,7 @@ def strip_generated_blocks(payload: dict, name: str, body: str) -> str:
 
 
 def reverse_check(
-    payload: dict, documents: dict[str, str], sites: set[tuple[str, int, str]]
+    payload: dict, documents: dict[str, str], sites: Counter[tuple[str, int, str]]
 ) -> list[str]:
     """Every number must be an allowed ordinal, or sit where an anchor put it.
 
@@ -255,25 +322,36 @@ def reverse_check(
     any other: an audit changed the README's first sentence from one measured
     value to a different measured value and the build stayed green.
 
-    So membership is not enough. A number passes only if some anchor phrase for
-    that exact value matched on that line, which is what `sites` records. A
-    number that is published but has wandered to a line no anchor claims is
-    reported, whether it arrived there by corruption or by a sentence nobody
-    anchored.
+    So membership is not enough, and nor is presence on the line. A number passes
+    only if an anchor phrase for that exact value matched on that line, and only
+    as many times as the anchors there account for. Presence alone was the
+    second version of this check and it was also broken: wherever two anchored
+    figures share a line, each was recorded against that line, so either could
+    be replaced by the other and both were still present. Counting is what
+    separates a figure appearing where an anchor put it from a figure appearing
+    where a different anchor put a different figure.
     """
     failures = []
     for name, raw in documents.items():
         body = strip_generated_blocks(payload, name, raw)
         for line_number, line in enumerate(body.split("\n"), start=1):
-            for found in NUMBER.findall(line):
-                if found in ALLOWED_BARE_NUMBERS:
+            seen = Counter(
+                found for found in NUMBER.findall(line) if found not in ALLOWED_BARE_NUMBERS
+            )
+            for found, count in sorted(seen.items()):
+                allowed = sites.get((name, line_number, found), 0)
+                if count <= allowed:
                     continue
-                if (name, line_number, found) in sites:
-                    continue
-                failures.append(
-                    f"{name}:{line_number}: {found} is not an allowed ordinal and no "
-                    "anchor phrase claims it here"
-                )
+                if allowed:
+                    failures.append(
+                        f"{name}:{line_number}: {found} appears {count} times but anchor "
+                        f"phrases account for {allowed} of them"
+                    )
+                else:
+                    failures.append(
+                        f"{name}:{line_number}: {found} is not an allowed ordinal and no "
+                        "anchor phrase claims it here"
+                    )
     return failures
 
 

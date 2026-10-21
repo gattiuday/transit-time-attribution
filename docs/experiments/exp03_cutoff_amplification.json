@@ -25,10 +25,6 @@
         "mean": 0.2664416104026007,
         "sd": 0.009035341969677044
       },
-      "mean_lateness_days": {
-        "mean": 0.41937107005316493,
-        "sd": 0.015095860993106265
-      },
       "worst_missed_cutoff_cost_hours": 6.0,
       "worst_missed_cutoff_cost_seconds": 21600
     },
@@ -47,10 +43,6 @@
         "mean": 0.3640679660169915,
         "sd": 0.011184399270018089
       },
-      "mean_lateness_days": {
-        "mean": 0.5964705109213019,
-        "sd": 0.015163719091626187
-      },
       "worst_missed_cutoff_cost_hours": 24.0,
       "worst_missed_cutoff_cost_seconds": 86400
     },
@@ -68,10 +60,6 @@
       "late_rate": {
         "mean": 0.37128032008002004,
         "sd": 0.01221199392865147
-      },
-      "mean_lateness_days": {
-        "mean": 0.5908846007549202,
-        "sd": 0.006105975804626786
       },
       "worst_missed_cutoff_cost_hours": 24.0,
       "worst_missed_cutoff_cost_seconds": 86400
