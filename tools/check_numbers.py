@@ -260,20 +260,24 @@ def forward_check(
                 # boundary unrecoverable whenever a wrapped line is indented.
                 head = flatten(line.rstrip())
                 window = head + " " + flatten(following.strip())
-                # Where in the window each matched phrase puts the value. A set
-                # of offsets rather than a count of matches, because the phrase
-                # list is allowed to contain overlapping phrases and often does:
-                # "{}% of the time" and "right {}% of the time" both match the
-                # same text, and summing their counts credited the line with two
-                # anchored occurrences of a value quoted once. That is how the
-                # README headline stayed green when its upstream share was
-                # replaced by the precision quoted later on the same line.
+                # Where in the window each matched phrase puts the value, taken
+                # as the offset of the digits rather than of the formatted
+                # string. For a negative metric those differ by one: the
+                # formatted value carries a minus sign and the number pattern
+                # does not match it, so recording `candidate.find(value)`
+                # recorded the sign's position and the reverse check, looking
+                # one character later, found an unanchored figure sitting inside
+                # its own anchor. Scanning the matched text with the same
+                # pattern the reverse check uses keeps the two in step whatever
+                # punctuation surrounds the digits.
+                digits = value.lstrip("-")
                 offsets = set()
                 for candidate in candidates:
-                    inside = candidate.find(value)
                     start = window.find(candidate)
                     while start != -1:
-                        offsets.add(start + inside)
+                        for match in NUMBER.finditer(candidate):
+                            if match.group() == digits:
+                                offsets.add(start + match.start())
                         start = window.find(candidate, start + 1)
                 if not offsets:
                     continue
@@ -296,7 +300,13 @@ def forward_check(
                 on_next_line = len(offsets) - on_this_line
                 for offset, occurrences in ((1, on_this_line), (2, on_next_line)):
                     if occurrences:
-                        key = (name, index + offset, value)
+                        # Keyed on the digits, not the formatted value. The
+                        # reverse check scans with the same pattern and that
+                        # pattern does not match a minus sign, so a site
+                        # recorded under "-0.92" was never looked up and a
+                        # negative metric sitting inside its own anchor was
+                        # reported as unanchored.
+                        key = (name, index + offset, digits)
                         sites[key] = max(sites[key], occurrences)
             if found:
                 quoted = True

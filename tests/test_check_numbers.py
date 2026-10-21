@@ -301,8 +301,12 @@ def test_no_metric_exists_only_to_widen_the_allowed_set(tmp_path):
     for name in payload["checked_documents"]:
         body = check_numbers.strip_non_prose((ROOT / name).read_text())
         numbers = set(check_numbers.NUMBER.findall(body))
+        # Compared on the digits, because the number pattern does not match a
+        # minus sign and a negative metric is therefore never equal to anything
+        # this finds. That made a correctly quoted negative figure look like a
+        # metric nobody quotes, which is the same sign bug the checker had.
         quoted_everywhere |= {
-            metric for metric, value in payload["formatted"].items() if value in numbers
+            metric for metric, value in payload["formatted"].items() if value.lstrip("-") in numbers
         }
     # Badge only metrics are exempt for the same reason the forward check
     # exempts them: `badge_check` guards the value and no prose anchor applies.
