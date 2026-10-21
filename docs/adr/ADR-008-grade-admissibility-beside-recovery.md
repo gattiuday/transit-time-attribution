@@ -61,9 +61,11 @@ the scorecard, which is the claim this repository exists to make. The ambiguity 
 downstream of it.
 
 What is given up is the recovery rate as evidence that the attribution is correct. It was
-never that. A reader who wants evidence of correctness should read the admissibility rate,
-the identity in ADR-007, and the control cases in `tests/test_grading.py`, and should treat
-88.4% as what it is: the rate at which one tiebreak agrees with another.
+never that. A reader who wants evidence of correctness should read the admissibility rate, the
+displacement invariant and its mutation test in ADR-007, and the control cases in
+`tests/test_grading.py`, and should treat 88.4% as what it is: the rate at which one
+tiebreak agrees with another. Not the reconciling identity, which ADR-007 once offered for
+this purpose and now explains is algebra.
 
 A generator that planted genuinely disjoint causes would restore recovery as a meaningful
 measurement, and that is the obvious next change. It is not made here because making the

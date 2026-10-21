@@ -40,8 +40,24 @@ on plan would not have avoided. The three charges then satisfy an identity.
     delivery_lateness = order_to_release + release_to_depart + transit - promise_slack
 
 where the slack is the buffer the promise holds over the plan, recovered by subtraction
-because nothing in an event log records it. `attribute.residual` computes the difference
-and a test asserts it is zero for every shipment in the fixture rather than for an example.
+because nothing in an event log records it.
+
+**That identity is algebra, not evidence, and this ADR said otherwise.** It claimed
+`attribute.residual` was verified "for every shipment in the fixture rather than for an
+example", and a later audit substituted random integers for the counterfactual departure and
+the committed transit and watched it still close on every row: both terms appear in the
+charges and again in the slack with opposite signs, so they cancel, and `residual` is the
+constant zero for every possible input. Iterating a constant two thousand times verifies
+nothing.
+
+The pairing that does not cancel is the one this decision is about. The two upstream charges
+must sum to the departure displacement, which is computed from the timestamps rather than
+from the charges, so a change to either that does not preserve their sum shows up.
+`attribute.displacement_residual` is that quantity, `tests/test_attribute.py` asserts it is
+zero over every shipment, and a mutation test reintroduces the double charge and checks the
+assertion goes red. That is the invariant to cite; the identity above is a consequence of the
+definitions and is kept because it is how the slack term was found, not because it tests
+anything.
 
 Negative slack is now the definition of `infeasible_plan` rather than an inference from a
 late delivery with no stage over plan. The two sets are the same set only while the

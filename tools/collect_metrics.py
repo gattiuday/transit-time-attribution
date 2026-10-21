@@ -69,11 +69,18 @@ ANCHORS: dict[str, list[str]] = {
         "and {}% recall",
     ],
     "multiple_cause_share_pct": ["{}% of late deliveries have"],
-    "stage_share_pct": ["into {}% caused by a stage"],
-    "over_attributed_pct": ["the lateness on {}% of late deliveries"],
+    "stage_share_pct": [
+        "into {}% caused by a stage",
+        "the window: {}%",
+        "of which {}% was",
+    ],
+    "over_attributed_pct": [
+        "the lateness on {}% of late deliveries",
+        "on {}% of late deliveries the charges summed",
+    ],
     "warehouse_recovered_under_double_charge": ["all but {} of 5428 planted"],
     "warehouse_planted": ["all but 391 of {} planted"],
-    "over_attribution_ratio": ["totalled {} times it"],
+    "over_attribution_ratio": ["totalled {} times it", "they came to {} times"],
     "recovery_under_double_charge_pct": ["recovery of {}%", "from {}% to 88.4%"],
     "infeasible_share_pct": ["{}% whose plan never reached the promise"],
     "scorecard_precision_sd": ["an sd of {} points across twelve logs"],
@@ -98,6 +105,7 @@ ANCHORS: dict[str, list[str]] = {
         "figure **recovers {}%**",
         "Then it showed {}% and called that recovery",
         "treat {}% as what it is",
+        "docstring said {}%, which is a different published figure",
         "proportional | {}% | the same as largest_cause",
     ],
     "admissible_pct": [
@@ -108,6 +116,7 @@ ANCHORS: dict[str, list[str]] = {
     "upstream_label_overlap_pct": [
         "Both labels are true of {}%",
         "both labels are true of {}% of",
+        "labels are true of {}% of the late deliveries carrying either",
         "measured as {}% across twelve independent logs",
     ],
     "worst_recovery_pct": [
@@ -148,7 +157,7 @@ ANCHORS: dict[str, list[str]] = {
     ],
     "fixture_shipments": ["{} shipments"],
     "python_min_version": ["Python {} or newer. No API", "Python {}+ | everything |"],
-    "experiment_shipments": ["logs of {} shipments"],
+    "experiment_shipments": ["logs of {} shipments", "twelve logs of\n> {} shipments"],
     "small_sample_shipments": ["In a {} shipment sample", "At {} shipments the"],
     "fixture_infeasible_share_pct": ["plans are {}% of", "{}% of the late"],
     "daily_floor_late": ["two choices produce {} and 970 late"],

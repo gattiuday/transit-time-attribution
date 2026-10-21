@@ -10,7 +10,7 @@ asking a question the data cannot answer, because the second is a consequence of
 and the first is not sufficient on its own: a six hour overrun on a lane with a later
 cutoff would have cost nothing.
 
-On this repository's fixture, 61.8% of late deliveries have more than one stage over plan.
+Measured across twelve logs, 61.8% of late deliveries have more than one stage over plan.
 That is not an artefact of the generator. It is what a step function downstream of a
 continuous overrun produces.
 
@@ -59,6 +59,9 @@ scoped one about which upstream team to talk to.
 Every output names its convention, and the verdict warns when the overlap share is high,
 which on realistic data it always is.
 
-A user who wants one cause per shipment can have one. They cannot have one that is
-correct more than about three quarters of the time, and the tool says so rather than
-letting the number imply otherwise.
+A user who wants one cause per shipment can have one. What they cannot have is one that is
+correct in the sense this ADR originally meant, because most late deliveries have more than
+one true cause and the planted label records an arbitrary choice among them. ADR-008 narrows
+this decision on exactly that point and should be read with it: every convention names a
+cause that is true of the shipment on 100.0% of late deliveries, and the recovery figures
+above measure agreement with the generator's choice rather than correctness.

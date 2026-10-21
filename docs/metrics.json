@@ -15,6 +15,7 @@
       "figure **recovers {}%**",
       "Then it showed {}% and called that recovery",
       "treat {}% as what it is",
+      "docstring said {}%, which is a different published figure",
       "proportional | {}% | the same as largest_cause"
     ],
     "carrier_rate_spread_points": [
@@ -53,7 +54,8 @@
       "share of 90.1% against {}%. That is a 51%"
     ],
     "experiment_shipments": [
-      "logs of {} shipments"
+      "logs of {} shipments",
+      "twelve logs of\n> {} shipments"
     ],
     "fixture_infeasible_share_pct": [
       "plans are {}% of",
@@ -99,10 +101,12 @@
       "{}% of late deliveries have"
     ],
     "over_attributed_pct": [
-      "the lateness on {}% of late deliveries"
+      "the lateness on {}% of late deliveries",
+      "on {}% of late deliveries the charges summed"
     ],
     "over_attribution_ratio": [
-      "totalled {} times it"
+      "totalled {} times it",
+      "they came to {} times"
     ],
     "python_min_version": [
       "Python {} or newer. No API",
@@ -158,7 +162,9 @@
       "roughly 2000 shipments to {}"
     ],
     "stage_share_pct": [
-      "into {}% caused by a stage"
+      "into {}% caused by a stage",
+      "the window: {}%",
+      "of which {}% was"
     ],
     "tests_total": [
       "{} tests"
@@ -166,6 +172,7 @@
     "upstream_label_overlap_pct": [
       "Both labels are true of {}%",
       "both labels are true of {}% of",
+      "labels are true of {}% of the late deliveries carrying either",
       "measured as {}% across twelve independent logs"
     ],
     "upstream_share_pct": [

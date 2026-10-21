@@ -39,9 +39,16 @@ def judge(summary: LogAttribution, thresholds: Thresholds = DEFAULTS) -> Verdict
     upstream = summary.upstream_share_of_late
     if upstream > thresholds.material_share:
         status = SCORECARD_BLIND
+        # Not "caused by a stage". The upstream share includes `infeasible_plan`,
+        # which `attribute.upstream_share_of_late` says is not a stage, and this
+        # sentence is the one the README was corrected for saying. It was
+        # corrected in the README and left here, where it is printed to the
+        # console and captured into the committed evidence SVGs, so the
+        # repository shipped its own corrected error as verbatim output.
         reasons.append(
-            f"{upstream:.1%} of late deliveries were caused by a stage that ends before "
-            "ship confirm, which is where a carrier scorecard starts counting"
+            f"{upstream:.1%} of late deliveries had a cause that ends before ship confirm "
+            f"or never reached the promise, of which {summary.stage_share_of_late:.1%} was "
+            "a stage; a carrier scorecard starts counting at ship confirm"
         )
         reasons.append(
             f"{summary.late_but_carrier_looks_fine} of {summary.late} late deliveries "

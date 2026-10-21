@@ -35,6 +35,14 @@ Four questions this answers that a scorecard cannot:
 
 Measured across twelve independent event logs of 4,000 shipments each:
 
+> **Two bases appear in this repository and every figure states which it is on.** The
+> headline figures and anything with a standard deviation are means over twelve logs of
+> 4,000 shipments. The tables in Claims 1 and 2, the console output and the cause breakdown
+> are the one committed fixture of 2000 shipments, so their denominators differ and their
+> values differ in the first decimal. An audit found three ADRs calling a twelve log mean
+> "on this repository's fixture", which is how a reader ends up comparing two numbers that
+> were never the same measurement.
+
 - **73.0% of late deliveries had a cause outside the scorecard's window**, with an sd of
   0.98 points. That splits into 64.2% caused by a stage that ends before ship confirm and
   8.8% whose plan never reached the promise, which is not a stage at all and is counted
@@ -218,12 +226,23 @@ stage inside its plan, were being attributed to a departure wait they had not ca
 charge is now a counterfactual: the departure the shipment caught, against the departure an
 on plan release would have caught. ADR-003.
 
-**Three planted labels that were not true.** Grading only works if the ground truth is
-ground truth. Shipments labelled as on plan had drifted past a cutoff, so the generator
-was producing a real missed cutoff and calling it nothing. Shipments labelled infeasible
-plan had a departure wait that genuinely overran. Both were showing up in the confusion
-matrix as misattributions when the label was the thing that was wrong. A recovery rate
-measured against a mislabelled fixture grades the generator, not the tool.
+**Four planted labels that were not true, and one that is true twice.** Grading only works
+if the ground truth is ground truth. Shipments labelled as on plan had drifted past a
+cutoff, so the generator was producing a real missed cutoff and calling it nothing.
+Shipments labelled infeasible plan had a departure wait that genuinely overran. Both showed
+up in the confusion matrix as misattributions when the label was the thing that was wrong.
+A third, found only when the generator was made to verify its own labels, had the bound for
+a missed cutoff computed without the handling floor: on the lane whose departures are spaced
+more closely than that floor the overrun was clamped to one minute, so about one in eight
+shipments labelled `missed_cutoff` missed nothing, and the test that should have caught it
+filters on lateness and those shipments were not late. A fourth was the verifier itself
+demanding that an execution label also be late, which a lane with three departures a day
+absorbs.
+
+The fifth problem is not a false label. `warehouse` and `missed_cutoff` are both true of
+almost every shipment carrying either, so the recovery rate measures which true label the
+generator happened to record. That is ADR-008 and the reason this README reports
+admissibility beside recovery.
 
 **A ranking inversion I went looking for, and what I found instead.** I expected the
 scorecard to name the wrong carrier outright, and the lane ordering does invert: the lane
@@ -343,6 +362,15 @@ this README, the defense guide, the ADRs or a source docstring that no anchor ph
 claims **fails the build**, which is what catches a figure corrupted into another measured
 figure's value. The four tables above are generated and checked by block equality, since
 their cells cannot be guarded by phrases.
+
+Two limits are worth stating because the sentence above overstated them until an audit
+measured it. Docstrings were being read and then discarded: the rule that drops any line
+indented four spaces is right for a markdown code block and deletes the body of every
+docstring inside a function, so four numbers were visible across fifteen source files and
+two of them were wrong. Docstrings are dedented first now. The second limit stands: a figure
+written in words is invisible to a digit scanner, and the worst inaccuracies this repository
+has published were written in words. `#` comments and `tests/` are outside the checked set
+too.
 
 ## Tech stack
 

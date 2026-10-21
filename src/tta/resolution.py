@@ -10,11 +10,14 @@ appears depends on the rounding rule rather than on what happened. Every
 attribution that depends on a near miss is lost at that granularity, and the
 share lost is measurable rather than arguable.
 
-The second is the resolution floor under a measured rate. A perfect scorecard
-precision over eleven flagged shipments is not perfection: it is "above eight in
-nine", and the sample size needed to support the claim being made from it is
-arithmetic. A measured zero gets the same treatment: zero misattributions over
-forty flags is "below one in forty", not none.
+The second is what a measured rate can support, which takes two bounds and not
+one. A rate over n observations can only take the values k/n, so a difference
+below one over n cannot be expressed: that is the granularity floor. It is not a
+confidence interval and it is much narrower than one, and this module used it as
+though it were the whole answer until an audit pointed out that a perfect
+precision over a handful of flags has a sampling interval several times wider
+than its floor. Both are computed here, the wider one decides, and the sample a
+claim needs is solved against it rather than by inverting the floor.
 """
 
 from __future__ import annotations
@@ -77,10 +80,12 @@ def wilson_interval(rate: float, size: int) -> tuple[float, float]:
     hypothetical sample size without rounding the numerator back to an integer.
     `samples_needed` used to do exactly that, and `round(rate * size)` moved the
     effective rate by up to half an observation, which made the search
-    non-monotone: an audit found seventeen sizes above the returned answer that
-    did not separate the claim. At a fixed rate the width shrinks monotonically
-    in the size, so searching without the rounding returns a threshold rather
-    than the first lucky size.
+    non-monotone: an audit found sizes above the returned answer that did not
+    separate the claim, so the answer was the first lucky size rather than a
+    threshold. At a fixed rate the width shrinks monotonically in the size, so
+    searching without the rounding returns a threshold.
+    `test_the_sample_needed_is_a_threshold_and_not_the_first_lucky_size` walks
+    five hundred sizes above the answer and is the check that this holds.
     """
     if size <= 0:
         raise AttributionError("a sampling interval over zero observations is undefined")
@@ -126,11 +131,12 @@ class RateWithFloor:
 
         It is not a confidence interval and it is much narrower than one. An
         audit found this module treating it as though it were, with `supported`
-        asking only whether a claim lay more than 1/n away, which at 21 flagged
-        shipments calls a five point gap resolved when the sampling error alone
-        is about six points. ADR-005 listed the arithmetic among the claims the
-        fixture fully establishes, which it does not: it establishes the
-        granularity bound. `sampling_half_width` is the other half.
+        asking only whether a claim lay more than one over n away, which on the
+        smallest sample this repository reports calls a five point gap resolved
+        while the interval around the same rate is more than twice that wide.
+        ADR-005 listed the arithmetic among the claims the fixture fully
+        establishes, which was true only of the granularity bound; that entry
+        now says so and names both. `sampling_half_width` is the other half.
         """
         if self.denominator == 0:
             raise AttributionError("a resolution floor over zero observations is undefined")
@@ -143,7 +149,7 @@ class RateWithFloor:
 
         Wilson rather than the normal approximation, because the rates this
         repository reports sit near one and the normal interval is worst exactly
-        there: at 21 of 21 it returns a width of zero and declares a perfect
+        there: at a perfect rate it returns a width of zero and declares a perfect
         sample. Wilson keeps a finite interval at the boundary, which is the
         whole reason to prefer it here.
         """
@@ -157,12 +163,13 @@ class RateWithFloor:
         Wilson is symmetric about (p + z^2/2n) / (1 + z^2/n), not about p, and
         the difference is largest exactly where this repository reports rates:
         near one, and at zero. `supported` compared the claim against p plus or
-        minus the half width, which is a different interval from this one. An
-        audit found 528 combinations of sample size, successes and claim where
-        that comparison called a claim distinguishable while the claim sat
+        minus the half width, which is a different interval from this one, and an
+        audit found hundreds of combinations of sample size, successes and claim
+        where that comparison called a claim distinguishable while the claim sat
         inside the real interval. At no misattributions over forty flags it put
-        the bound at 4.4% when the interval reaches 8.8%, which is the case the
-        module docstring above advertises.
+        the bound at half of where the interval actually reaches. `tests/
+        test_resolution.py` pins that case with both numbers, where a test can
+        fail if either moves.
         """
         return wilson_interval(self.rate, self.denominator)
 

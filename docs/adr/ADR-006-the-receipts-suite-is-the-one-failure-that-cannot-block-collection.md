@@ -43,11 +43,16 @@ published count is the count.
 
 What is given up is that the receipts suite no longer gates the file it validates. A real
 regression in `tools/check_numbers.py` could therefore be present while
-`docs/metrics.json` is rewritten. Three things catch it. `make verify` runs collection and
-then the full suite, so the regression fails that build. CI runs the same target on every
-push with no flag that skips it. And the suite is the thing being regressed, so a
-regression there shows up as a failing test the moment anything runs it, rather than as a
-quietly wrong number.
+`docs/metrics.json` is rewritten. Three things catch it. `make verify` runs collection and then the full suite, so the
+regression fails that build. CI does not run that target, and for a while ran nothing
+after collection at all while this ADR said it did; an audit caught that by reading the
+workflow against the sentence. The workflow now runs the receipts suite as its own step
+after the receipts step. CI also carries a gate that is stronger for this purpose: it
+regenerates the receipts and fails on any difference from the committed copy, so a checker
+that has stopped catching things cannot quietly rewrite a document into agreement with
+itself. And the suite is the
+thing being regressed, so a regression there shows up as a failing test the moment anything
+runs it, rather than as a quietly wrong number.
 
 What is not given up is the original property: a figure still cannot be published from a
 run in which any part of the measured system is broken. The exemption covers the tests

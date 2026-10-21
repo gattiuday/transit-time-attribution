@@ -190,7 +190,7 @@ def label_is_true(shipment: Shipment, cause: str) -> str | None:
     ran over its plan. It does not claim the delivery was late, because the
     promise carries a buffer and a lane with three departures a day absorbs a
     good deal: the first version of this check demanded lateness of `warehouse`
-    and `carrier` and found 26 shipments that overran and arrived on time. Those
+    and `carrier` and found two dozen shipments that overran and arrived on time. Those
     labels are true and the absorption is Claim 2's finding, not a defect.
 
     `infeasible_plan` is about the plan and not the outcome either, for the same

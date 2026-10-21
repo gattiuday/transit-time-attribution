@@ -64,6 +64,14 @@ jobs:
           python tools/collect_metrics.py --skip-tests --skip-experiments
           python tools/check_numbers.py --summary receipts-summary.md
 
+      # The suite again, after collection. ADR-006 exempts the receipts suite
+      # from the collector's red run guard because those tests read the file
+      # collection writes, and the mitigation it names is a run that happens
+      # afterwards. `make verify` has it; this workflow claimed to and did not,
+      # which an audit caught by reading the two side by side.
+      - name: The receipts suite, after collection
+        run: python -m pytest tests/test_check_numbers.py -q
+
       # The collection above overwrites docs/metrics.json and the generated
       # blocks before anything reads them, so without this gate a committed
       # metrics file can disagree with the run it claims to come from and CI

@@ -73,9 +73,13 @@ def stage_lateness(shipment: Shipment, lane: Lane, handling_seconds: int) -> dic
     departure by a full day accounts for nine of those twenty four hours as
     itself; charging the whole displacement to the departure as well bills the
     same nine hours twice. The first version of this module did that, and an
-    audit measured the result: on 88.4% of late deliveries the charges summed
-    past the lateness they were explaining, and in total they came to nearly
-    twice it. Worse, the double charge was load bearing. A missed departure is
+    audit measured the result: on 91.2% of late deliveries the charges summed
+    past the lateness they were explaining, and in total they came to 2.05 times
+    it. This docstring said 88.4%, which is a different published figure
+    entirely, and it sat here through two audits because the number checker
+    deleted every indented docstring before reading a source file.
+
+    Worse, the double charge was load bearing. A missed departure is
     larger than the overrun that caused it only because the overrun was added
     to it, so `largest_cause` named the departure wait for almost every
     warehouse overrun and the repository wrote that up as a structural ceiling
@@ -148,9 +152,9 @@ def admissible_causes(
     arbitrary for the two upstream causes: a release that overran by nine hours
     has also missed a departure, so `warehouse` and `missed_cutoff` are both
     true of it, and which one was written down depends only on which
-    distribution the overrun was drawn from. An audit measured the overlap at
-    482 of 484 upstream labels on the committed fixture, and the generator's own
-    label verifier passes both, because both are true.
+    distribution the overrun was drawn from. Measured over twelve logs, both
+    labels are true of 96.2% of the late deliveries carrying either, and the
+    generator's own label verifier passes both, because both are true.
 
     That makes recovery against a single planted label the wrong question. It
     measures how often the attribution guessed the same true statement the

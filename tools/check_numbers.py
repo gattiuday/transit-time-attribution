@@ -40,6 +40,7 @@ import argparse
 import json
 import re
 import sys
+import textwrap
 from collections import Counter
 from pathlib import Path
 
@@ -112,8 +113,25 @@ DOCSTRING = re.compile(r'"""(.*?)"""', re.DOTALL)
 
 
 def docstrings_only(text: str) -> str:
-    """Everything between triple quotes, and nothing else."""
-    return "\n".join(DOCSTRING.findall(text))
+    """Everything between triple quotes, dedented so the prose survives stripping.
+
+    Dedenting is not cosmetic. `strip_non_prose` deletes any line indented four
+    spaces or more, which is right for a markdown document where that means a
+    code block and catastrophic here, where it means the body of every docstring
+    that sits inside a function or a class. An audit measured the result: four
+    numbers visible across fifteen source files, while the README claimed a
+    figure in a source docstring that no anchor claims fails the build. Two
+    figures were wrong in exactly that blind spot.
+
+    So each docstring is dedented before the markdown rules run, and the first
+    line, which carries no indentation of its own, is joined to a body that now
+    carries none either.
+    """
+    out = []
+    for block in DOCSTRING.findall(text):
+        first, _, rest = block.partition("\n")
+        out.append(first if not rest else first + "\n" + textwrap.dedent(rest))
+    return "\n".join(out)
 
 
 def strip_non_prose(text: str) -> str:

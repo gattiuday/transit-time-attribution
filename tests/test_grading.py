@@ -155,18 +155,25 @@ def test_no_convention_recovers_every_planted_cause():
     This test asserted a recovery band of 0.6 to 0.8 and passed, and the band
     was measuring a defect. The release overrun was charged twice, once as
     itself and once as the departure it pushed, which made a missed departure
-    mechanically larger than the overrun that caused it; `largest_cause`
-    therefore named the departure for all but ten of two hundred and four
-    warehouse overruns. Netting the departure charge moved that to 135 and the
-    overall recovery from 57.9% to 89.2%, so the ceiling this test was pinning
-    was arithmetic, not structure. ADR-007.
+    mechanically larger than the overrun that caused it, so `largest_cause` named
+    the departure for all but a handful of the planted warehouse overruns.
+    Netting the departure charge moved the recovery from 68.6% to 88.4% over
+    twelve logs, so the ceiling this test was pinning was arithmetic, not
+    structure. ADR-007 carries the measured figures; this docstring carried two
+    that nothing in the repository produced, because `tests/` is outside the set
+    of documents the number checker reads and a figure nobody checks drifts.
 
     What remains is real and smaller. On a lane with one departure a day a nine
     hour overrun still leaves fifteen hours of waiting that releasing on plan
     would have avoided, so `largest_cause` names the timetable rather than the
-    warehouse. The two conventions now disagree by about eighteen points rather
-    than five, because the double charge used to swamp the difference between
-    them. The convention matters more once the arithmetic is right, not less.
+    warehouse. The two conventions disagree by about nineteen points, which is
+    what ADR-007 and ADR-008 say. An earlier version of this docstring also gave
+    a before figure for that spread; nothing in the repository measured
+    `first_cause` under the old charge, so there is no before figure to give.
+
+    And read `test_the_attribution_never_names_a_stage_that_did_not_overrun`
+    before this test. Recovery here is agreement with an arbitrary label, not
+    correctness. ADR-008.
     """
     for convention in ("first_cause", "largest_cause"):
         graded = _graded(convention)
@@ -419,10 +426,10 @@ def test_a_shipment_labelled_on_plan_that_arrives_late_is_a_false_label(one_lane
 # Admissibility: whether the named cause is true of the shipment at all.
 #
 # Recovery against a planted label measures agreement with a choice the
-# generator made between simultaneously true statements. On the committed
-# fixture 482 of 484 shipments labelled `warehouse` or `missed_cutoff` satisfy
-# both label predicates, and `label_is_true` passes both, because both are
-# true. ADR-008.
+# generator made between simultaneously true statements. Both labels are true of
+# 96.2% of the late deliveries carrying either, measured over twelve logs by
+# `experiments/exp01`, and `label_is_true` passes both, because both are true.
+# ADR-008.
 # --------------------------------------------------------------------------
 
 

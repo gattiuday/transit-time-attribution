@@ -29,9 +29,11 @@ warehouse, which no carrier will sign. It also still produces one number with no
 attribution inside it.
 
 The problem is not that the window is too narrow. It is that one number cannot carry three
-causes. On this log, 73.0% of late deliveries were caused by a stage that ends before ship
-confirm, and the same share arrives with the carrier inside its committed window, so every
-one of them is recorded as a carrier success. Widening the window changes who gets blamed.
+causes. Across twelve logs, 73.0% of late deliveries had a cause outside the window: 64.2%
+caused by a stage that ends before ship confirm and 8.8% whose plan never reached the
+promise, which is not a stage at all and is counted because a scorecard cannot see a
+planning error either. Every one of them arrives with the carrier inside its committed
+window, so every one is recorded as a carrier success. Widening the window changes who gets blamed.
 It does not say who should be.
 
 ### 2. "How do you know the attribution is right?"
@@ -43,12 +45,17 @@ accident: a sibling project in this portfolio shipped a simulator that nothing g
 when its own stated grading criterion was finally pointed at it, it had been wrong from
 the start.
 
-The grading is also what found three defects here, and all three were in the generator
-rather than the tool. Shipments labelled as on plan had drifted past a cutoff, so the
-generator was producing a real missed cutoff and calling it nothing. Shipments labelled
-infeasible plan had a departure wait that genuinely overran. Both appeared in the matrix
-as misattributions when the label was the thing that was wrong. A recovery rate measured
-against a mislabelled fixture grades the generator, not the tool.
+The grading is also what found four false labels, all in the generator rather than the
+tool. Shipments labelled as on plan had drifted past a cutoff, so the generator was
+producing a real missed cutoff and calling it nothing. Shipments labelled infeasible plan
+had a departure wait that genuinely overran. A third had the bound for a missed cutoff
+computed without the handling floor, so about one in eight such labels described a shipment
+that missed nothing, and a fourth was the verifier itself demanding lateness of a label
+that only claims a stage overran. A recovery rate measured against a mislabelled fixture
+grades the generator, not the tool.
+
+What the grading could not find is that two of the labels are usually both true, which took
+reading the predicates side by side rather than running them. ADR-008.
 
 ### 3. "What is the weakest part of this repository?"
 
@@ -145,9 +152,10 @@ deliveries here and the tool currently says only that the plan was the problem.
 
 ## Numbers I should know cold
 
-- **73.0% of late deliveries** were caused by a stage that ends before ship confirm, with
-  an sd of 0.98 points across twelve logs. The same share arrive with the carrier inside
-  its window.
+- **73.0% of late deliveries** had a cause outside the scorecard's window, with an
+  **sd of 0.98 points** across twelve logs. That splits **into 64.2% caused by a stage**
+  that ends before ship confirm and **8.8% whose plan never reached the promise**, which is
+  not a stage. The same share arrive with the carrier inside its window.
 - The scorecard is right **92.6% of the time** about what it flags and **sees 27.0%** of
   the late deliveries. Precise and blind is the harder failure to notice.
 - **61.8% of late deliveries have** more than one stage over plan, and
