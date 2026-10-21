@@ -66,9 +66,15 @@ BOLD = re.compile(r"\*\*?")
 #: A number as a document writes one, thousands separators included. Without
 #: the comma group, "200,000" reads as a 200 and a 000, neither of which matches
 #: any metric, so a correctly quoted figure fails the reverse check.
+#: The trailing guard excludes a word character, and a dot only when a digit
+#: follows it. `(?![\w.])` excluded any dot, so a figure at the end of a
+#: sentence matched nothing and the reverse check could not see it. On this
+#: repository that hid the published sample size in ADR-005, which sat at the
+#: end of its sentence and was therefore unguarded while the summary line
+#: counted it among the verified figures.
 NUMBER = re.compile(
-    r"(?<![\w.,])\d{1,3}(?:,\d{3})+(?![\w.])"
-    r"|(?<![\w.,])\d+(?:\.\d+)?(?!,\d{3})(?![\w.])"
+    r"(?<![\w.,])\d{1,3}(?:,\d{3})+(?!\w)(?!\.\d)"
+    r"|(?<![\w.,])\d+(?:\.\d+)?(?!,\d{3})(?!\w)(?!\.\d)"
 )
 #: shields.io badge values. A badge is a published claim sitting in the first
 #: screen, and stripping markdown targets hid it from both checks. The test

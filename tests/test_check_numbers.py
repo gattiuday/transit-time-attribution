@@ -304,7 +304,10 @@ def test_no_metric_exists_only_to_widen_the_allowed_set(tmp_path):
         quoted_everywhere |= {
             metric for metric, value in payload["formatted"].items() if value in numbers
         }
-    unquoted = sorted(set(payload["formatted"]) - quoted_everywhere)
+    # Badge only metrics are exempt for the same reason the forward check
+    # exempts them: `badge_check` guards the value and no prose anchor applies.
+    exempt = set(payload.get("badge_only", []))
+    unquoted = sorted(set(payload["formatted"]) - quoted_everywhere - exempt)
     assert not unquoted, (
         "these metrics are quoted in no checked document, so each one only widens "
         f"the set of numbers the reverse check will accept: {unquoted}"
@@ -527,3 +530,21 @@ def test_the_command_line_entry_point_still_exits_non_zero(tmp_path):
     assert value in body
     readme.write_text(body.replace(value, "11.1", 1))
     assert _spawn(root) == 1
+
+
+def test_a_figure_at_the_end_of_a_sentence_is_visible_to_the_reverse_check(sandbox):
+    """The pattern excluded a digit followed by a dot, which hid sentence final figures.
+
+    `(?![\\w.])` was meant to stop "3.11" being read as a 3 and an 11, and it
+    also stopped "8000." being read at all. A published figure at the end of a
+    sentence was therefore unguarded while the run counted it among the verified
+    ones, which is the worst combination available: an unchecked number that
+    looks checked.
+    """
+    root, _ = sandbox
+    value = _payload()["formatted"]["smallest_supporting_sample"]
+    target = root / "docs" / "adr" / "ADR-005-what-a-generated-event-log-cannot-establish.md"
+    body = target.read_text()
+    assert f"{value}." in body, "the sentence final case this test exists for has moved"
+    target.write_text(body.replace(f"{value}.", "99999.", 1))
+    assert _run(root) != 0, "a figure at the end of a sentence can still be corrupted"

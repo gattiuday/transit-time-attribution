@@ -171,7 +171,7 @@ deliveries here and the tool currently says only that the plan was the problem.
 - At 250 shipments the scorecard **flags 21 shipments**, a **granularity floor of 5.09%**,
   and a sampling interval that cannot **resolve anything below 12.50%**. The claim
   **needs 138 flagged shipments** to separate, which is 8000 shipments on one lane.
-- **233 tests**, **100.00% line coverage**, over a fixture of **2000 shipments** across
+- **234 tests**, **100.00% line coverage**, over a fixture of **2000 shipments** across
   **three lanes**.
 
 ## If someone says this is just event log analysis
