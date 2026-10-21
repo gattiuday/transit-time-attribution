@@ -54,6 +54,13 @@ INLINE_CODE = re.compile(r"`[^`\n]*`")
 INDENTED_CODE = re.compile(r"(?m)^(?: {4}|\t).*$")
 HTML_ATTRIBUTE = re.compile(r'\w+="[^"]*"')
 MARKDOWN_TARGET = re.compile(r"\]\([^)]*\)")
+#: A clock time. "16:05" is two numbers to a digit scanner and one time to a
+#: reader, and neither of its halves is a measurement. Stripped before anything
+#: else runs, because otherwise every cutoff hour in the prose reads as a claim.
+CLOCK_TIME = re.compile(r"\b\d{1,2}:\d{2}\b")
+#: Markdown emphasis. It is formatting, not content, and a pair of asterisks
+#: between an anchor's words stops the anchor matching prose that is correct.
+BOLD = re.compile(r"\*\*?")
 #: A number as a document writes one, thousands separators included. Without
 #: the comma group, "200,000" reads as a 200 and a 000, neither of which matches
 #: any metric, so a correctly quoted figure fails the reverse check.
@@ -109,6 +116,8 @@ def docstrings_only(text: str) -> str:
 def strip_non_prose(text: str) -> str:
     """Remove the parts of a document that may legitimately contain invented numbers."""
     text = COMMAND_FENCE.sub(" ", text)
+    text = CLOCK_TIME.sub(" ", text)
+    text = BOLD.sub("", text)
     text = INDENTED_CODE.sub(" ", text)
     text = INLINE_CODE.sub(" ", text)
     text = MARKDOWN_TARGET.sub(" ", text)
@@ -350,7 +359,11 @@ def main() -> int:
 
     verified, stale, sites = forward_check(payload, documents)
     unverified = reverse_check(payload, documents, sites)
-    drifted = block_check(payload) + badge_check(payload)
+    # These were summed into one counter reported as "generated blocks drifted",
+    # so a badge mismatch printed a count of drifted blocks when no block had
+    # drifted. Two different checks deserve two counters.
+    drifted = block_check(payload)
+    badges = badge_check(payload)
 
     for line in verified:
         print(line)
@@ -358,15 +371,16 @@ def main() -> int:
         print(f"FAIL  {failure}", file=sys.stderr)
     for failure in unverified:
         print(f"FAIL  {failure}", file=sys.stderr)
-    for failure in drifted:
+    for failure in drifted + badges:
         print(f"FAIL  {failure}", file=sys.stderr)
 
-    total = len(stale) + len(unverified) + len(drifted)
+    total = len(stale) + len(unverified) + len(drifted) + len(badges)
     print(
         f"\n{len(verified)} anchored figures verified across "
         f"{len(documents)} documents, {len(stale)} stale, "
         f"{len(unverified)} numbers matching no metric, "
-        f"{len(drifted)} generated blocks drifted"
+        f"{len(drifted)} generated blocks drifted, "
+        f"{len(badges)} badges disagreeing with the run"
     )
 
     if args.summary:
@@ -375,8 +389,13 @@ def main() -> int:
             f"- {len(verified)} anchored figures verified across {len(documents)} documents\n"
             f"- {len(stale)} figures quoted outside their anchor phrase\n"
             f"- {len(unverified)} numbers in prose matching no measured metric\n\n"
-            + f"- {len(drifted)} generated blocks that have drifted\n\n"
-            + ("\n".join(f"- FAIL {f}" for f in stale + unverified + drifted) if total else "")
+            + f"- {len(drifted)} generated blocks that have drifted\n"
+            + f"- {len(badges)} badges disagreeing with the run\n\n"
+            + (
+                "\n".join(f"- FAIL {f}" for f in stale + unverified + drifted + badges)
+                if total
+                else ""
+            )
             + "\n"
         )
     return 1 if total else 0

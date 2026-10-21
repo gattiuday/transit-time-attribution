@@ -148,16 +148,16 @@ def test_deleting_a_checked_document_fails_the_build(tmp_path):
 def test_a_drifted_generated_block_fails_the_build(tmp_path):
     """The convention table is guarded by block equality rather than by phrases."""
     root = _sandbox(tmp_path)
-    block = root / "docs" / "generated" / "archetype-table.txt"
-    block.write_text(block.read_text().replace("archetype", "shape", 1))
+    block = root / "docs" / "generated" / "cause-table.txt"
+    block.write_text(block.read_text().replace("cause", "stage", 1))
     assert _run(root) != 0
 
 
 BLOCKS = (
-    "archetype-table.txt",
-    "quantity-table.md",
-    "assumption-table.md",
-    "frontier-table.md",
+    "cause-table.txt",
+    "lane-table.md",
+    "clock-table.md",
+    "convention-table.md",
 )
 
 
@@ -174,11 +174,16 @@ def test_corrupting_a_cell_of_a_generated_table_fails_the_build(tmp_path, block_
     root = _sandbox(tmp_path)
     readme = root / "README.md"
     block = (root / "docs" / "generated" / block_name).read_text()
-    digits = [line for line in block.strip().split("\n") if any(c.isdigit() for c in line)]
+    digits = [line for line in block.strip().split("\n") if re.search(r"\d", line)]
     line = digits[-1]
     body = readme.read_text()
     assert line in body, f"the README no longer contains {block_name}"
-    readme.write_text(body.replace(line, line.replace("9", "4", 1), 1))
+    # Increment the first digit, whatever it is. An earlier version swapped a
+    # literal "9" for a "4", which silently did nothing on a block whose last
+    # row happened to contain no nine.
+    corrupted = re.sub(r"\d", lambda m: str((int(m.group()) + 1) % 10), line, count=1)
+    assert corrupted != line
+    readme.write_text(body.replace(line, corrupted, 1))
     assert _run(root) != 0
 
 
@@ -279,3 +284,80 @@ def test_an_invented_metric_is_caught_by_the_laundering_test(tmp_path):
         numbers = set(check_numbers.NUMBER.findall(body))
         quoted |= {m for m, v in payload["formatted"].items() if v in numbers}
     assert "invented_launderer" not in quoted
+
+
+# --------------------------------------------------------------------------
+# The collector's red-run guard.
+#
+# `collect_metrics.read_suite` refuses to publish figures from a run whose
+# tests failed, which is the right default and was also a deadlock: the tests
+# in this file read the file the collector writes, so they are red by
+# construction whenever the figures are stale, and the figures cannot stop
+# being stale until the file is written. The guard was narrowed to exempt this
+# file alone. These tests pin both halves of that narrowing, because an
+# exemption nobody tests is indistinguishable from a hole.
+# --------------------------------------------------------------------------
+
+sys.path.insert(0, str(ROOT / "tools"))
+import collect_metrics  # noqa: E402
+
+
+def _junit(tests: int, failing: list[tuple[str, str]]) -> str:
+    cases = "".join(
+        f'<testcase classname="{classname}" name="{name}">'
+        f'<failure message="x">x</failure></testcase>'
+        for classname, name in failing
+    )
+    return (
+        f'<testsuite name="pytest" tests="{tests}" failures="{len(failing)}" '
+        f'errors="0" skipped="0">{cases}</testsuite>'
+    )
+
+
+def _read_suite_with(monkeypatch, tmp_path, junit: str, covered: float = 100.0):
+    junit_path = tmp_path / "junit.xml"
+    junit_path.write_text(junit)
+    coverage_path = tmp_path / "coverage.json"
+    coverage_path.write_text(json.dumps({"totals": {"percent_covered": covered}}))
+    monkeypatch.setattr(collect_metrics, "JUNIT_PATH", junit_path)
+    monkeypatch.setattr(collect_metrics, "COVERAGE_PATH", coverage_path)
+    return collect_metrics.read_suite()
+
+
+def test_a_failing_test_outside_the_receipts_suite_refuses_to_publish(monkeypatch, tmp_path):
+    """The guard must still stop figures being published from a broken run."""
+    junit = _junit(178, [("tests.test_attribute", "test_the_counterfactual_charge")])
+    with pytest.raises(SystemExit) as caught:
+        _read_suite_with(monkeypatch, tmp_path, junit)
+    message = str(caught.value)
+    assert "refusing to publish" in message
+    assert "tests/test_attribute.py::test_the_counterfactual_charge" in message
+
+
+def test_a_failing_receipts_test_does_not_block_collection(monkeypatch, tmp_path, capsys):
+    """The one exemption, which is what breaks the deadlock.
+
+    These tests cannot pass before the file they read has been written, so
+    treating them as blocking means the file can never be written. Collection
+    proceeds and warns; `make verify` re-runs the suite afterwards, so a real
+    receipts regression still fails the build.
+    """
+    junit = _junit(178, [("tests.test_check_numbers", "test_the_checker_passes")])
+    suite = _read_suite_with(monkeypatch, tmp_path, junit)
+    assert suite["tests_total"] == 178
+    assert "receipts tests are red" in capsys.readouterr().err
+
+
+def test_a_mixed_run_refuses_rather_than_warning(monkeypatch, tmp_path):
+    """One exempt failure must not carry a non-exempt one through with it."""
+    junit = _junit(
+        178,
+        [
+            ("tests.test_check_numbers", "test_the_checker_passes"),
+            ("tests.test_report", "test_the_report_quotes_the_convention"),
+        ],
+    )
+    with pytest.raises(SystemExit) as caught:
+        _read_suite_with(monkeypatch, tmp_path, junit)
+    assert "test_the_report_quotes_the_convention" in str(caught.value)
+    assert "test_the_checker_passes" not in str(caught.value)

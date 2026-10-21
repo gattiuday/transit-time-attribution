@@ -70,7 +70,8 @@ def build() -> str:
         f'<text x="620" y="168" text-anchor="middle" {SMALL}>the committed window</text>',
         '<rect x="442" y="56" width="356" height="130" fill="none" stroke="#b7791f" '
         'stroke-width="2" stroke-dasharray="6 4" rx="6"/>',
-        f'<text x="620" y="205" text-anchor="middle" {TITLE}>the carrier scorecard measures only this</text>',
+        f'<text x="620" y="205" text-anchor="middle" {TITLE}>'
+        "the carrier scorecard measures only this</text>",
         box(
             30,
             240,

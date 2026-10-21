@@ -24,13 +24,13 @@ Properties of the arithmetic and of the lifecycle, identical against real data:
 - **Lanes with different departure frequency are not comparable on delivered service.**
   Every lane in the fixture is generated with the same mix of planted causes, so the
   carriers are equally good by construction, and the three departure lane still shows
-  22.8% late against 36.4% and 37.1%. The mechanism transfers; the sizes do not.
+  22.8% on the three departure lane against 36.8% late on the others. The mechanism transfers; the sizes do not.
 - **No single cause convention recovers every planted cause**, because 62.8% of late
   deliveries have more than one stage over plan. Structural.
 - **A coarser clock loses the attribution silently.** It reports fewer late shipments
   rather than an error.
-- **The resolution floor arithmetic.** A rate over 21 flagged shipments cannot separate
-  100% from 95%, whatever the flags were.
+- **The resolution floor arithmetic.** A rate over 21 flagged shipments cannot separate a
+  perfect rate from one five points below it, whatever the flags were.
 - **The exit code contract.** Behavioural.
 
 ## Claims the fixture establishes only conditionally
@@ -40,7 +40,7 @@ Properties of the arithmetic and of the lifecycle, identical against real data:
   warehouse and a loose timetable would show far less; one with a 14:00 cutoff and a
   struggling pick line would show more. What transfers is that the share is not zero and
   is not visible from the scorecard.
-- **The scorecard's 92.6% precision and 28.1% recall.** The precision is high because the
+- **The scorecard's precision of 92.6% and 28.1% recall.** The precision is high because the
   generator's carrier overruns are large enough to breach the committed window every time.
   Real carrier lateness includes marginal misses that a tolerance absorbs, so real
   precision would be lower and real recall lower still. The shape, precise about what it

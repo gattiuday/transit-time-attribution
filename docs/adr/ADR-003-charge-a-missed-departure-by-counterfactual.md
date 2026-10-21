@@ -24,8 +24,7 @@ handling time every shipment incurs and charges the rest. It is better and still
 because an *early* release can land in an unlucky part of the day just as easily as a
 late one. `experiments/exp01` caught this: shipments whose planted cause was an
 infeasible plan, with every stage inside its plan, were being attributed to a departure
-wait they had not caused. 128 of them, in a confusion matrix that existed precisely to
-catch this.
+wait they had not caused, in a confusion matrix that existed precisely to catch this.
 
 ## Decision
 
@@ -46,12 +45,13 @@ than derived there, so the arithmetic holds no knowledge of any particular lane.
 
 The charge is a step, and the step size is the gap between departures. That makes two
 lanes with identical carriers and identical warehouse error rates produce very different
-delivered service: on this repository's fixture, 36.4% and 37.1% late on the single
-departure lanes against 22.8% on the lane with three, with the carrier caused rate
-identical at 9.0% to 9.1% across all three.
+delivered service: on this repository's fixture, 36.8% late on
+the single departure lanes against 22.8% on the lane with three, with the carrier caused
+rate identical across all three to within a tenth of a point.
 
 The lane with the most departures therefore shows the best delivered service **and** the
-largest carrier share of its own lateness, 40.1% against 24%. A scorecard comparing
+largest carrier share of its own lateness, 40.1% on the lane with three against 24.4% of
+its own lateness on the single departure lanes. A scorecard comparing
 carriers across lanes of different departure frequency is comparing timetables, and the
 carrier on the most forgiving schedule looks best whatever it does. `experiments/exp03`.
 

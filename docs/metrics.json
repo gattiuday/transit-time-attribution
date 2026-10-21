@@ -1,0 +1,281 @@
+{
+  "anchors": {
+    "best_recovery_pct": [
+      "recovers {}%",
+      "first_cause | {}% | missed"
+    ],
+    "carrier_rate_spread_points": [
+      "spread of {} points"
+    ],
+    "convention_spread_points": [
+      "spread across conventions measures {} points"
+    ],
+    "coverage_line_pct": [
+      "{}% line coverage",
+      "{}% over eleven",
+      "that cannot tell {}% from 75%.",
+      "{}% from 95%,",
+      "measured precision of {}%, and a sample"
+    ],
+    "daily_clock_late_loss_pct": [
+      "loses {}% of"
+    ],
+    "daily_clock_mode_swing_pct": [
+      "swings the count by {}%",
+      "75.5%. That is a {}% difference in"
+    ],
+    "daily_floor_late": [
+      "two choices produce {} and 970 late"
+    ],
+    "daily_floor_upstream_pct": [
+      "an upstream share of {}% against 75.5%."
+    ],
+    "daily_nearest_late": [
+      "produce 631 and {} late shipments"
+    ],
+    "daily_nearest_upstream_pct": [
+      "share of 63.9% against {}%. That is a 54%"
+    ],
+    "experiment_shipments": [
+      "logs of {} shipments"
+    ],
+    "fixture_lanes": [
+      "{} lanes"
+    ],
+    "fixture_shipments": [
+      "{} shipments"
+    ],
+    "flagged_at_small_sample": [
+      "flags {} shipments",
+      "A rate over {} flagged"
+    ],
+    "hourly_clock_shift_points": [
+      "shifts it by {} points"
+    ],
+    "infeasible_plan_share_pct": [
+      "plans are {}% of",
+      "{}% of the late"
+    ],
+    "invisible_share_pct": [
+      "{}% arrive with the carrier",
+      "The {}% upstream",
+      "not from the data. The {}% upstream share",
+      "is general. That it is {}% is a fact about",
+      "that transfer. The {}% upstream share"
+    ],
+    "multi_departure_carrier_share_pct": [
+      "{}% on the lane with three",
+      "of its own lateness, {}% against 24%. A"
+    ],
+    "multi_departure_late_pct": [
+      "against {}% on",
+      "service against {}% on the three",
+      "{}% late against",
+      "against {}% on the three",
+      "{}% on the three"
+    ],
+    "multiple_cause_share_pct": [
+      "{}% of late deliveries have"
+    ],
+    "python_min_version": [
+      "Python {} or newer. No API",
+      "Python {}+ | everything |"
+    ],
+    "resolution_floor_small_pct": [
+      "floor of {}%"
+    ],
+    "scorecard_precision_pct": [
+      "{}% of the time",
+      "right {}% of the time",
+      "The scorecard's {}% precision and",
+      "precision of {}% and"
+    ],
+    "scorecard_recall_pct": [
+      "sees {}%",
+      "{}% of them",
+      "92.6% precision and {}% recall. The",
+      "and {}% recall"
+    ],
+    "single_departure_carrier_share_pct": [
+      "{}% of its own lateness"
+    ],
+    "single_departure_late_pct": [
+      "{}% late on"
+    ],
+    "single_lane_best_late_pct": [
+      "{}% on the three",
+      "against {}% on the lane with three",
+      "shows {}% on the three"
+    ],
+    "single_lane_worst_late_pct": [
+      "late against 36.4% and {}%. The mechanism"
+    ],
+    "small_sample_shipments": [
+      "In a {} shipment sample",
+      "At {} shipments the"
+    ],
+    "smallest_supporting_sample": [
+      "about {} shipments",
+      "needs about {} shipments",
+      "needs about {} shipments to resolve",
+      "needs about {} shipments to separate"
+    ],
+    "tests_total": [
+      "{} tests"
+    ],
+    "upstream_share_pct": [
+      "{}% of late deliveries",
+      "The {}% upstream",
+      "not from the data. The {}% upstream share",
+      "is general. That it is {}% is a fact about",
+      "that transfer. The {}% upstream share"
+    ],
+    "upstream_share_sd": [
+      "sd of {} points"
+    ],
+    "worst_recovery_pct": [
+      "down to {}%",
+      "proportional | {}% | the same as",
+      "largest_cause | {}% | warehouse"
+    ]
+  },
+  "badge_only": [
+    "python_min_version"
+  ],
+  "checked_documents": [
+    "README.md",
+    "docs/defense-guide.md",
+    "docs/adr/ADR-001-reconstruct-stages-rather-than-read-the-scorecard.md",
+    "docs/adr/ADR-002-timestamp-granularity-bounds-the-attribution.md",
+    "docs/adr/ADR-003-charge-a-missed-departure-by-counterfactual.md",
+    "docs/adr/ADR-004-report-the-convention-beside-every-cause.md",
+    "docs/adr/ADR-005-what-a-generated-event-log-cannot-establish.md",
+    "docs/adr/ADR-006-the-receipts-suite-is-the-one-failure-that-cannot-block-collection.md",
+    "src/tta/__init__.py",
+    "src/tta/attribute.py",
+    "src/tta/cli.py",
+    "src/tta/config.py",
+    "src/tta/errors.py",
+    "src/tta/generator.py",
+    "src/tta/report.py",
+    "src/tta/resolution.py",
+    "src/tta/stages.py",
+    "experiments/exp01_recovery.py",
+    "experiments/exp02_scorecard_blindness.py",
+    "experiments/exp03_cutoff_amplification.py",
+    "experiments/exp04_clock_granularity.py",
+    "experiments/exp05_resolution_floor.py"
+  ],
+  "formats": {
+    "best_recovery_pct": "{:.1f}",
+    "carrier_rate_spread_points": "{:.1f}",
+    "convention_spread_points": "{:.1f}",
+    "coverage_line_pct": "{:.0f}",
+    "daily_clock_late_loss_pct": "{:.0f}",
+    "daily_clock_mode_swing_pct": "{:.0f}",
+    "daily_floor_late": "{:.0f}",
+    "daily_floor_upstream_pct": "{:.1f}",
+    "daily_nearest_late": "{:.0f}",
+    "daily_nearest_upstream_pct": "{:.1f}",
+    "experiment_shipments": "{:,.0f}",
+    "flagged_at_small_sample": "{:.0f}",
+    "hourly_clock_shift_points": "{:.2f}",
+    "infeasible_plan_share_pct": "{:.1f}",
+    "invisible_share_pct": "{:.1f}",
+    "multi_departure_carrier_share_pct": "{:.1f}",
+    "multi_departure_late_pct": "{:.1f}",
+    "multiple_cause_share_pct": "{:.1f}",
+    "python_min_version": "{:.2f}",
+    "resolution_floor_small_pct": "{:.2f}",
+    "scorecard_precision_pct": "{:.1f}",
+    "scorecard_recall_pct": "{:.1f}",
+    "single_departure_carrier_share_pct": "{:.1f}",
+    "single_departure_late_pct": "{:.1f}",
+    "single_lane_best_late_pct": "{:.1f}",
+    "single_lane_worst_late_pct": "{:.1f}",
+    "upstream_share_pct": "{:.1f}",
+    "upstream_share_sd": "{:.2f}",
+    "worst_recovery_pct": "{:.1f}"
+  },
+  "formatted": {
+    "best_recovery_pct": "72.4",
+    "carrier_rate_spread_points": "0.2",
+    "convention_spread_points": "0.0",
+    "coverage_line_pct": "100",
+    "daily_clock_late_loss_pct": "51",
+    "daily_clock_mode_swing_pct": "54",
+    "daily_floor_late": "631",
+    "daily_floor_upstream_pct": "63.9",
+    "daily_nearest_late": "970",
+    "daily_nearest_upstream_pct": "75.5",
+    "experiment_shipments": "4,000",
+    "fixture_lanes": "3",
+    "fixture_shipments": "2000",
+    "flagged_at_small_sample": "21",
+    "hourly_clock_shift_points": "0.11",
+    "infeasible_plan_share_pct": "11.6",
+    "invisible_share_pct": "71.9",
+    "multi_departure_carrier_share_pct": "40.1",
+    "multi_departure_late_pct": "22.8",
+    "multiple_cause_share_pct": "62.8",
+    "python_min_version": "3.11",
+    "resolution_floor_small_pct": "5.09",
+    "scorecard_precision_pct": "92.6",
+    "scorecard_recall_pct": "28.1",
+    "single_departure_carrier_share_pct": "24.4",
+    "single_departure_late_pct": "36.8",
+    "single_lane_best_late_pct": "22.8",
+    "single_lane_worst_late_pct": "37.1",
+    "small_sample_shipments": "250",
+    "smallest_supporting_sample": "2000",
+    "tests_total": "181",
+    "upstream_share_pct": "71.9",
+    "upstream_share_sd": "0.96",
+    "worst_recovery_pct": "67.3"
+  },
+  "generated_blocks": {
+    "README.md": [
+      "cause-table.txt",
+      "lane-table.md",
+      "clock-table.md",
+      "convention-table.md"
+    ]
+  },
+  "metrics": {
+    "best_recovery_pct": 72.4385936666725,
+    "carrier_rate_spread_points": 0.16301864071714967,
+    "convention_spread_points": 0.0,
+    "coverage_line_pct": 100.0,
+    "daily_clock_late_loss_pct": 50.87252675964968,
+    "daily_clock_mode_swing_pct": 53.76997226990623,
+    "daily_floor_late": 631.0833333333334,
+    "daily_floor_upstream_pct": 63.87661138881414,
+    "daily_nearest_late": 970.4166666666666,
+    "daily_nearest_upstream_pct": 75.49225269900424,
+    "experiment_shipments": 4000,
+    "fixture_lanes": 3,
+    "fixture_shipments": 2000,
+    "flagged_at_small_sample": 20.75,
+    "hourly_clock_shift_points": 0.11131124432789408,
+    "infeasible_plan_share_pct": 11.616954474097332,
+    "invisible_share_pct": 71.89221219990051,
+    "multi_departure_carrier_share_pct": 40.10017416974678,
+    "multi_departure_late_pct": 22.811952988247064,
+    "multiple_cause_share_pct": 62.78178423883142,
+    "python_min_version": 3.11,
+    "resolution_floor_small_pct": 5.092897655040104,
+    "scorecard_precision_pct": 92.58148678818304,
+    "scorecard_recall_pct": 28.107787800099487,
+    "single_departure_carrier_share_pct": 24.40290690883799,
+    "single_departure_late_pct": 36.767414304850575,
+    "single_lane_best_late_pct": 22.811952988247064,
+    "single_lane_worst_late_pct": 37.128032008002,
+    "small_sample_shipments": 250,
+    "smallest_supporting_sample": 2000,
+    "tests_total": 181,
+    "upstream_share_pct": 71.89221219990051,
+    "upstream_share_sd": 0.9622659333522733,
+    "worst_recovery_pct": 67.31393527686296
+  },
+  "note": "every value here is read from a run: the test suite, the experiments, the committed fixture, or the project's own configuration. No figure is transcribed by hand"
+}

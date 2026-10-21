@@ -1,6 +1,6 @@
 """How large does a sample have to be before any of these rates means anything?
 
-Question the README asks: a scorecard precision of 93% is a rate over the
+Question the README asks: a scorecard precision in the nineties is a rate over the
 shipments it flagged, and on a single lane in a single month that may be a
 handful. A rate over a handful is not a rate.
 
@@ -11,7 +11,7 @@ measured precision from the claim a transport team would make from it.
 
 The uncomfortable part is at the top of the table. A scorecard that flags four
 shipments and is right about all four has a measured precision of 100%, and a
-sample that cannot tell 100% from 75%.
+sample that cannot tell that apart from three in four.
 """
 
 from __future__ import annotations
