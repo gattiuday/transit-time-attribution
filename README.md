@@ -1,0 +1,347 @@
+# transit-time-attribution
+
+**A carrier scorecard starts its clock at ship confirm, so every delay that happened before that moment is outside the window it measures. On the event log here, 71.9% of late deliveries were caused by a stage the scorecard cannot see, and it is right 92.6% of the time about the ones it does flag.**
+
+[![CI](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml/badge.svg)](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)
+![Tests](https://img.shields.io/badge/tests-181-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
+
+## The thing a carrier scorecard cannot tell you
+
+On time in full is measured from ship confirm to delivery against a committed transit
+window. A shipment the warehouse released after the day's last departure waits for
+tomorrow, the carrier collects it the next morning, and delivers comfortably inside its
+window from there. The scorecard records a carrier success. The customer records a late
+delivery. **Both are correct, about different things.**
+
+The delay is not measured imprecisely by the scorecard. It is not measured. There is no
+term in it for anything before ship confirm, so a late release and a perfect release are
+the same input.
+
+Four questions this answers that a scorecard cannot:
+
+1. Of the deliveries that arrived late, how many were caused by a stage that ends before
+   the scorecard starts counting?
+2. When the scorecard does flag a carrier, how often is it right, and what share of the
+   problem is it seeing at all? Those are different questions and only one of them is
+   usually asked.
+3. What does a missed departure cutoff actually cost, and does that make two carriers on
+   different lanes comparable?
+4. How much of any of this survives the clock the transport system actually keeps?
+
+## The uncomfortable numbers
+
+Measured across twelve independent event logs of 4,000 shipments each:
+
+- **71.9% of late deliveries were caused by a stage that ends before ship confirm**, with
+  an sd of 0.96 points. The same share arrives with the carrier inside its committed
+  window, so the scorecard records every one of them as a carrier success.
+- **The scorecard is right 92.6% of the time about the shipments it flags, and sees 28.1%
+  of the late deliveries.** A metric that is nearly always right about what it flags and
+  blind to most of the problem is the harder failure to notice, because being rarely wrong
+  reads as being trustworthy.
+- **62.8% of late deliveries have more than one stage over plan**, so which single stage
+  gets named depends on a convention rather than on the data. The best convention recovers
+  72.4% of planted causes and the worst is down to 67.3%.
+- **A daily clock loses 51% of the late deliveries outright**, and the rounding rule alone
+  swings the count by 54%. Nothing errors. The operation simply looks better than it is.
+- **In a 250 shipment sample the scorecard flags 21 shipments**, a resolution floor of
+  5.09%, which cannot separate its measured precision from a claim five points away. It
+  needs about 2000 shipments to resolve.
+
+181 tests, 100% line coverage, and every figure above is re-measured by CI and checked
+against this document in both directions on every push.
+
+## Quickstart
+
+Requires Python 3.11 or newer. No API keys, no network, no cloud credentials.
+
+```bash
+git clone https://github.com/GITHUB_USERNAME/transit-time-attribution.git
+cd transit-time-attribution
+python -m pip install -e ".[dev]"
+
+# the headline
+python -m tta.cli attribute --log data/fixtures/event-log.csv
+
+# what the sample and the clock can support
+python -m tta.cli resolution --log data/fixtures/event-log.csv
+
+# re-measure everything and check this README against it
+make verify
+```
+
+## Claim 1: most of the lateness is outside the window
+
+```
+cause                   late deliveries  share of late   scorecard
+------------------------------------------------------------------
+release_to_depart                   379         59.5%     outside
+transit                             174         27.3%      inside
+infeasible_plan                      74         11.6%     outside
+order_to_release                     10          1.6%     outside
+------------------------------------------------------------------
+total late                          637        100.0%
+of which upstream                               72.7%
+```
+
+The last column is the finding. One stage of three lies inside a carrier scorecard, and
+it accounts for a quarter of the late deliveries on this log. This block is generated from
+the committed fixture and the number checker asserts the README contains it verbatim, so
+no cell here can drift.
+
+`infeasible_plan` is its own cause rather than a stage failure: the delivery was late with
+every stage inside its plan, because the plan never added up to the promise. Naming a
+stage there would blame an operation for arithmetic done before it started.
+
+## Claim 2: a missed cutoff is a step, which makes lanes incomparable
+
+| Lane | Departures a day | A missed cutoff costs | Delivered late | Carrier caused | Carrier share of its lateness |
+| --- | --- | --- | --- | --- | --- |
+| GULF-THREE-DEPART | 3 | 6 hours | 22.8% | 9.1% | 40.1% |
+| MIDWEST-ONE-DEPART | 1 | 24 hours | 36.4% | 9.0% | 24.6% |
+| WEST-LONG-HAUL | 1 | 24 hours | 37.1% | 9.0% | 24.2% |
+
+Every lane is generated with the same mix of planted causes, so **the carriers are equally
+good by construction** and the carrier caused rate confirms it: across the three lanes that
+rate varies by a spread of 0.2 points across twelve logs, which is sampling noise and not a
+difference between carriers. What differs is the timetable.
+
+A shipment released one minute after the last departure on a single departure lane does
+not leave one minute late. It leaves a day late. So the same upstream error rate produces
+36.8% late on the single departure lanes against 22.8% on the lane with three, and the
+carrier's share of its own lateness runs 24.4% of its own lateness on the single departure
+lanes against 40.1% on the lane with three.
+
+**The lane with the most forgiving timetable has the worst carrier and the best delivered
+service.** A scorecard comparing carriers across lanes of different departure frequency is
+comparing timetables.
+
+## Claim 3: which upstream stage gets named is a convention
+
+| Convention | Recovers the planted cause | Loses most on |
+| --- | --- | --- |
+| first_cause | 72.4% | missed_cutoff |
+| largest_cause | 67.3% | warehouse |
+| proportional | 67.3% | warehouse |
+
+The two single cause conventions fail on opposite groups and neither clears four fifths.
+A release that overran by six hours has also missed the day's last departure: both stages
+are over plan, both statements are true, and no rule makes one of them the cause.
+`first_cause` recovers every warehouse overrun and blames missed cutoffs on the warehouse
+too. `largest_cause` recovers every missed cutoff and blames warehouse overruns on the
+departure wait, because a missed departure is mechanically larger than the overrun that
+caused it.
+
+**The headline does not depend on this choice.** Both upstream stages lie outside the
+scorecard's window, so which one a convention names cannot change how much the scorecard
+misses. The upstream share is identical under all three: the
+spread across conventions measures 0.0 points, and a test fails if that ever stops being
+true. So this repository makes a strong claim about how much is invisible and
+a scoped one about which team to talk to.
+
+## Claim 4: the clock bounds everything above
+
+| Clock | Rounding | Late deliveries | Upstream share |
+| --- | --- | --- | --- |
+| minute | floor | 1285 | 71.9% |
+| minute | nearest | 1284 | 71.9% |
+| quarter_hour | floor | 1282 | 71.9% |
+| quarter_hour | nearest | 1283 | 71.9% |
+| hour | floor | 1273 | 72.0% |
+| hour | nearest | 1275 | 72.0% |
+| day | floor | 631 | 63.9% |
+| day | nearest | 970 | 75.5% |
+
+An hourly clock costs almost nothing, which was not the expected result and is reported as
+measured: it shifts it by 0.11 points. A daily clock loses half the late deliveries, and
+which half depends on the rounding rule, which no transport system records anywhere.
+
+## What the measurement found
+
+**A departure charge that blamed the warehouse for the timetable.** The first version
+charged the whole release to departure wait. A shipment released at 06:00 on a lane whose
+only departure is at 16:00 waits ten hours and did nothing wrong. The second version
+charged the wait above a fixed handling floor, which is better and still wrong: an early
+release can land in an unlucky part of the day just as easily as a late one. The confusion
+matrix caught it, because shipments whose planted cause was an infeasible plan, with every
+stage inside its plan, were being attributed to a departure wait they had not caused. The
+charge is now a counterfactual: the departure the shipment caught, against the departure an
+on plan release would have caught. ADR-003.
+
+**Three planted labels that were not true.** Grading only works if the ground truth is
+ground truth. Shipments labelled as on plan had drifted past a cutoff, so the generator
+was producing a real missed cutoff and calling it nothing. Shipments labelled infeasible
+plan had a departure wait that genuinely overran. Both were showing up in the confusion
+matrix as misattributions when the label was the thing that was wrong. A recovery rate
+measured against a mislabelled fixture grades the generator, not the tool.
+
+**A ranking inversion I went looking for and did not find.** The lane with the worst
+delivered service also has the worst carrier on this fixture, so the headline is not that
+a scorecard fires the wrong carrier. What it does is make carriers on different lanes
+incomparable, which is a weaker and better supported claim, and it is the one in Claim 2.
+The stronger version is not reported because the measurement did not support it.
+
+## Architecture
+
+<img src="docs/img/architecture.svg" alt="The shipment lifecycle from order created to delivered, with the carrier scorecard window marked around ship confirm to delivery, and the two upstream stages it excludes" width="980">
+
+## Evidence
+
+<img src="docs/img/console-attribute.svg" alt="Console output of the attribute command showing the cause table with the scorecard window marked, the verdict and the two warnings" width="980">
+
+Verbatim stdout, rendered by `tools/capture_evidence.py`, which runs the command and
+writes what it printed. These SVGs are regenerated and checked for drift in CI, so they
+cannot go stale while the numbers move.
+[`docs/evidence-manifest.json`](docs/evidence-manifest.json) lists each captured command
+with its exit code.
+
+## What is in the fixture
+
+2000 shipments across 3 lanes, generated with the cause of each late delivery written
+down, because the quantity this tool produces is the one no transport system records.
+There is no real log with a labelled answer, so grading the attribution at all requires
+planting one.
+
+Five planted causes, and two of them are deliberately kept apart:
+
+- **warehouse** releases hours late. The overrun itself is the story.
+- **missed_cutoff** releases minutes late, but late enough to miss the day's last
+  departure. Both are upstream of ship confirm and they behave differently: one is
+  proportional and one is a step. A tool that lumped them would report the right total and
+  the wrong fix.
+- **carrier** exceeds the committed transit window.
+- **infeasible_plan** has every stage inside its plan and a promise the plan never reached.
+- **none** releases on or before plan and arrives on time.
+
+A control case runs the whole pipeline on a log containing only carrier caused lateness,
+and the verdict comes back sound. A tool that found the same problem in every input would
+be measuring its own assumptions.
+
+## What this cannot measure
+
+- **Whether a transport team acting on this would decide better.** The tool says the
+  scorecard misses most of the lateness. It does not know what the warehouse could have
+  done differently, what a later cutoff would cost to negotiate, or whether the carrier
+  would accept a wider window. ADR-005.
+- **Dirty timestamps, as opposed to coarse ones.** A scanner clock that drifts or a
+  milestone backfilled by hand produces timestamps that are out of order, and those
+  shipments are refused by name rather than repaired. That refusal is a selection effect
+  nobody has measured: if chaotic shipments attract manual intervention, refusing them
+  biases the attribution toward the shipments that went smoothly. The fixture produces
+  none, so this repository cannot measure that bias and does not pretend to.
+- **Ad hoc capacity.** The counterfactual assumes a fixed, known departure schedule. A
+  lane where a shipment can be re-planned onto a different service has no single departure
+  it "would have" caught.
+- **Absolute levels that transfer.** The 71.9% upstream share follows from the planted
+  cause mix. That it is not zero, and not visible from a scorecard, is general. Its size
+  is not.
+
+## Layout
+
+```
+src/tta/
+  stages.py      the five timestamps, the three stages, and the one boundary a
+                 scorecard starts at; refuses timestamps it cannot order
+  attribute.py   per stage lateness, three conventions, and the counterfactual
+                 departure charge that took two wrong answers to reach
+  generator.py   a seeded event log with the cause of each late delivery planted
+  resolution.py  clock coarsening, and the floor under every rate
+  report.py      verdict policy, kept separate from the arithmetic
+  cli.py         three subcommands, four exit codes
+experiments/     five experiments writing JSON to docs/experiments/
+tools/           collect_metrics.py, check_numbers.py, render_diagram.py,
+                 capture_evidence.py
+docs/adr/        five decision records
+data/fixtures/   the committed event log and its planted causes
+```
+
+## Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| 0 | the scorecard is measuring most of the lateness that happened |
+| 1 | the analysis ran and the answer was no: it misses a material share |
+| 2 | the analysis could not be run on this log |
+| 3 | usage error |
+
+1 and 2 are distinct on purpose. A transport team wiring this into a carrier review needs
+to read the report on 1 and fix the data on 2. The distinction is carried by the exception
+type rather than inferred from the exception class, so `UnattributableShipment` subclasses
+both `AttributionError` and `ValueError` and the handler reads the author's intent.
+
+## Make targets
+
+| Target | What it does |
+| --- | --- |
+| `make lint` | ruff check and format check |
+| `make test` | pytest with coverage and machine readable reports |
+| `make experiments` | re-run all five experiments |
+| `make fixture` | regenerate the committed event log and its planted causes |
+| `make receipts` | re-capture evidence, re-measure every figure, check this README |
+| `make verify` | lint, test, receipts |
+
+`tools/check_numbers.py` works in both directions. Forward, every anchored figure must
+appear inside its **anchor phrase** rather than as a bare digit. Reverse, any number in
+this README, the defense guide, the ADRs or a source docstring that no anchor phrase
+claims **fails the build**, which is what catches a figure corrupted into another measured
+figure's value. The four tables above are generated and checked by block equality, since
+their cells cannot be guarded by phrases.
+
+## Tech stack
+
+| Technology | Role here | Why this one |
+| --- | --- | --- |
+| Python 3.11+ | everything | `itertools.pairwise` is how the timestamp ordering check reads as the invariant it is rather than as index arithmetic |
+| numpy | the generator and the replication statistics | the cause mix is a weighted draw over thousands of shipments, which is one call and a loop otherwise |
+| pandas | reading and writing event logs | a CSV with a header is what a transport team can actually export from a TMS |
+| pytest | 181 tests | parametrising over three conventions and four clock granularities is how the convention findings are pinned without a copy of each test |
+| ruff | lint and format | one tool, so a contributor cannot pass lint and fail format |
+| GitHub Actions | re-measurement | the numbers in this README are only trustworthy if something recomputes them without being asked |
+
+Deliberately absent: a date library. Every quantity here is a duration, and datetimes
+would bring time zones and daylight saving into arithmetic that does not need them. A
+lane's cutoff is a local hour, resolved once when the log is built. ADR-002 records what
+that gives up.
+
+## Decision records
+
+- [ADR-001: Reconstruct the stages from the event log rather than reading the scorecard](docs/adr/ADR-001-reconstruct-stages-rather-than-read-the-scorecard.md)
+- [ADR-002: Timestamps are seconds, and granularity bounds what can be attributed](docs/adr/ADR-002-timestamp-granularity-bounds-the-attribution.md)
+- [ADR-003: Charge a missed departure by counterfactual, not by the wait](docs/adr/ADR-003-charge-a-missed-departure-by-counterfactual.md)
+- [ADR-004: Report the convention beside every cause, because overlap is the norm](docs/adr/ADR-004-report-the-convention-beside-every-cause.md)
+- [ADR-005: What a generated event log can and cannot establish](docs/adr/ADR-005-what-a-generated-event-log-cannot-establish.md)
+- [ADR-006: The receipts suite is the one failure that cannot block collection](docs/adr/ADR-006-the-receipts-suite-is-the-one-failure-that-cannot-block-collection.md)
+
+## The Pivot
+
+**Out of scope: telling anyone what to fix.** Once the stages are attributed, the obvious
+next step is to rank the interventions: move the cutoff an hour later, add a second
+departure, tighten the pick line. That is deliberately not built, because ranking them
+needs the cost of each, and this repository has no way to measure what a later cutoff
+costs to negotiate or what a second departure costs to run.
+
+The trigger for building it: a user who can supply a cost per intervention, or a carrier
+contract with a schedule change clause that supplies one.
+
+## Future work
+
+- A block of lanes rather than three, so the comparability finding in Claim 2 can be
+  stated as a correlation between departure frequency and apparent carrier quality rather
+  than as three rows.
+- Out of order timestamps in the generator, so the selection effect of refusing them
+  becomes measurable rather than acknowledged.
+- Partial attribution across stages carried through to the lane summary, since the
+  proportional convention currently informs a shipment's shares and not the roll up.
+- Promise setting as its own stage, because `infeasible_plan` is 11.6% of the late
+  deliveries here and the tool currently says only that the plan was the problem.
+
+First metric to watch on any of these: the share of late deliveries whose cause lies
+outside the scorecard. If a new feature makes that share easier to ignore rather than
+easier to see, it is the wrong feature.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
