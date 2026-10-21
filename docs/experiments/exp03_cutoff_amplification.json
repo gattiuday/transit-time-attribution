@@ -1,0 +1,80 @@
+{
+  "best_otif_lane": "GULF-THREE-DEPART",
+  "multi_departure_carrier_share": 0.40100174169746783,
+  "multi_departure_late_rate": 0.22811952988247064,
+  "note": "every lane is generated with the same mix of planted causes, so the carriers are equally good by construction. The lane with the most departures still shows the best delivered service and the largest carrier share of its own lateness, because a forgiving timetable absorbs upstream error and leaves only the carrier's own",
+  "per_lane": {
+    "GULF-THREE-DEPART": {
+      "carrier_rate": {
+        "mean": 0.09133533383345836,
+        "sd": 0.00493618016245853
+      },
+      "carrier_share_of_late": {
+        "mean": 0.40100174169746783,
+        "sd": 0.025665009885132546
+      },
+      "cutoff_hour": 18,
+      "departures_per_day": 3,
+      "late_rate": {
+        "mean": 0.22811952988247064,
+        "sd": 0.010592160970066484
+      },
+      "mean_lateness_days": {
+        "mean": 0.46675345256706713,
+        "sd": 0.017352962895732165
+      },
+      "worst_missed_cutoff_cost_hours": 6.0,
+      "worst_missed_cutoff_cost_seconds": 21600
+    },
+    "MIDWEST-ONE-DEPART": {
+      "carrier_rate": {
+        "mean": 0.08970514742628687,
+        "sd": 0.008997395042636414
+      },
+      "carrier_share_of_late": {
+        "mean": 0.24623772069821334,
+        "sd": 0.021740425029740197
+      },
+      "cutoff_hour": 16,
+      "departures_per_day": 1,
+      "late_rate": {
+        "mean": 0.3640679660169915,
+        "sd": 0.011184399270018089
+      },
+      "mean_lateness_days": {
+        "mean": 0.5964705109213019,
+        "sd": 0.015163719091626187
+      },
+      "worst_missed_cutoff_cost_hours": 24.0,
+      "worst_missed_cutoff_cost_seconds": 86400
+    },
+    "WEST-LONG-HAUL": {
+      "carrier_rate": {
+        "mean": 0.0898349587396849,
+        "sd": 0.007081771887501774
+      },
+      "carrier_share_of_late": {
+        "mean": 0.24182041747854646,
+        "sd": 0.015154381282754871
+      },
+      "cutoff_hour": 14,
+      "departures_per_day": 1,
+      "late_rate": {
+        "mean": 0.37128032008002004,
+        "sd": 0.01221199392865147
+      },
+      "mean_lateness_days": {
+        "mean": 0.5908846007549202,
+        "sd": 0.006105975804626786
+      },
+      "worst_missed_cutoff_cost_hours": 24.0,
+      "worst_missed_cutoff_cost_seconds": 86400
+    }
+  },
+  "question": "what does a missed cutoff cost, and does it make lanes comparable",
+  "replications": 12,
+  "single_departure_carrier_share": 0.2440290690883799,
+  "single_departure_late_rate": 0.36767414304850576,
+  "worst_carrier_is_best_otif": true,
+  "worst_carrier_lane": "GULF-THREE-DEPART"
+}

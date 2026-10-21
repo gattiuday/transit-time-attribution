@@ -1,0 +1,46 @@
+{
+  "claim": 0.95,
+  "flagged_at_smallest_sample": 20.75,
+  "floor_at_smallest_sample": 0.05092897655040104,
+  "note": "the scorecard flags roughly one shipment in ten, so a lane needs thousands of shipments before its precision separates from a claim two points away. A monthly review on one lane is reporting a rate its sample cannot resolve, and the number looks the same either way",
+  "question": "how large a sample does the scorecard precision claim need",
+  "replications": 12,
+  "series": [
+    {
+      "claim_supported_share": 0.3333333333333333,
+      "flagged_mean": 20.75,
+      "precision_mean": 0.9146996309532066,
+      "resolution_floor_mean": 0.05092897655040104,
+      "shipments": 250
+    },
+    {
+      "claim_supported_share": 0.5833333333333334,
+      "flagged_mean": 46.416666666666664,
+      "precision_mean": 0.9218574162234243,
+      "resolution_floor_mean": 0.0220419724070148,
+      "shipments": 500
+    },
+    {
+      "claim_supported_share": 0.6666666666666666,
+      "flagged_mean": 93.0,
+      "precision_mean": 0.9265731133237081,
+      "resolution_floor_mean": 0.010803279557340452,
+      "shipments": 1000
+    },
+    {
+      "claim_supported_share": 1.0,
+      "flagged_mean": 191.58333333333334,
+      "precision_mean": 0.9226399931755563,
+      "resolution_floor_mean": 0.00524025487388088,
+      "shipments": 2000
+    },
+    {
+      "claim_supported_share": 0.9166666666666666,
+      "flagged_mean": 390.1666666666667,
+      "precision_mean": 0.9258148678818304,
+      "resolution_floor_mean": 0.0025681321913790106,
+      "shipments": 4000
+    }
+  ],
+  "smallest_sample_supporting_the_claim": 2000
+}

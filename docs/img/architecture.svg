@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="580" viewBox="0 0 980 580">
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5568"/></marker></defs>
+<rect x="0" y="0" width="980" height="580" fill="#ffffff"/>
+<text x="490.0" y="30" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="bold" fill="#1a202c">transit-time-attribution: where the scorecard starts counting</text>
+<rect x="30" y="70" width="150" height="58" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.4" rx="6"/>
+<text x="105.0" y="103.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">order created</text>
+<line x1="180" y1="99" x2="236" y2="99" stroke="#4a5568" stroke-width="1.5" marker-end="url(#head)"/>
+<rect x="236" y="70" width="150" height="58" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.4" rx="6"/>
+<text x="311.0" y="103.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">released</text>
+<line x1="386" y1="99" x2="442" y2="99" stroke="#4a5568" stroke-width="1.5" marker-end="url(#head)"/>
+<rect x="442" y="70" width="150" height="58" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.4" rx="6"/>
+<text x="517.0" y="103.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">ship confirm</text>
+<line x1="592" y1="99" x2="648" y2="99" stroke="#4a5568" stroke-width="1.5" marker-end="url(#head)"/>
+<rect x="648" y="70" width="150" height="58" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.4" rx="6"/>
+<text x="723.0" y="103.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">delivered</text>
+<text x="208" y="152" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="bold" fill="#2d3748">order to release</text>
+<text x="208" y="168" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">warehouse picking</text>
+<text x="414" y="152" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="bold" fill="#2d3748">release to depart</text>
+<text x="414" y="168" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">waiting for a departure</text>
+<text x="620" y="152" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="bold" fill="#2d3748">transit</text>
+<text x="620" y="168" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">the committed window</text>
+<rect x="442" y="56" width="356" height="130" fill="none" stroke="#b7791f" stroke-width="2" stroke-dasharray="6 4" rx="6"/>
+<text x="620" y="205" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="bold" fill="#2d3748">the carrier scorecard measures only this</text>
+<rect x="30" y="240" width="356" height="92" fill="#fff8e6" stroke="#b7791f" stroke-width="1.8" rx="6"/>
+<text x="208.0" y="266.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">outside the scorecard entirely</text>
+<text x="208.0" y="282.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">a late release, or a release that missed</text>
+<text x="208.0" y="298.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">the cutoff and waited for tomorrow.</text>
+<text x="208.0" y="314.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">Minutes become a day.   ADR-003</text>
+<rect x="442" y="240" width="356" height="92" fill="#ffffff" stroke="#4a5568" stroke-width="1.6" rx="6"/>
+<text x="620.0" y="266.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">inside the scorecard</text>
+<text x="620.0" y="282.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">the carrier exceeded its committed</text>
+<text x="620.0" y="298.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">transit. Routinely beaten on a shipment</text>
+<text x="620.0" y="314.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">the warehouse made late.</text>
+<line x1="208" y1="186" x2="208" y2="240" stroke="#4a5568" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="620" y1="220" x2="620" y2="240" stroke="#4a5568" stroke-width="1.5" marker-end="url(#head)"/>
+<rect x="30" y="372" width="356" height="78" fill="#fff8e6" stroke="#b7791f" stroke-width="1.8" rx="6"/>
+<text x="208.0" y="391.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">planted ground truth</text>
+<text x="208.0" y="407.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">the generator writes down which stage</text>
+<text x="208.0" y="423.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">caused each late delivery, so the</text>
+<text x="208.0" y="439.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">attribution is graded   exp01</text>
+<rect x="442" y="372" width="356" height="78" fill="#ffffff" stroke="#4a5568" stroke-width="1.6" rx="6"/>
+<text x="620.0" y="391.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">resolution limits</text>
+<text x="620.0" y="407.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">a daily clock loses most of the lateness,</text>
+<text x="620.0" y="423.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">and a rate over few flags resolves nothing</text>
+<text x="620.0" y="439.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">exp04, exp05</text>
+<rect x="180" y="490" width="620" height="62" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.4" rx="6"/>
+<text x="490.0" y="517.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" fill="#1a202c">verdict: is the scorecard measuring the lateness that happened</text>
+<text x="490.0" y="533.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#4a5568">0 yes   1 it misses a material share   2 cannot answer   3 usage</text>
+<line x1="208" y1="450" x2="360" y2="490" stroke="#4a5568" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="620" y1="450" x2="620" y2="490" stroke="#4a5568" stroke-width="1.5" marker-end="url(#head)"/>
+</svg>

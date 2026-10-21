@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="394" viewBox="0 0 1420 394">
+<rect width="1420" height="394" fill="#1b1f27" rx="8"/>
+<text x="18" y="32" font-family="monospace" font-size="13" fill="#ffd479">$ python -m tta.cli attribute --log data/fixtures/event-log.csv</text>
+<text x="1402" y="32" text-anchor="end" font-family="monospace" font-size="12" fill="#7d8590">exit 1</text>
+<text x="18" y="64" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">2000 shipments, 637 delivered late (31.9%)</text>
+<text x="18" y="82" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve"></text>
+<text x="18" y="100" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">cause                   late deliveries  share of late   scorecard</text>
+<text x="18" y="118" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">------------------------------------------------------------------</text>
+<text x="18" y="136" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">release_to_depart                   379         59.5%     outside</text>
+<text x="18" y="154" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">transit                             174         27.3%      inside</text>
+<text x="18" y="172" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">infeasible_plan                      74         11.6%     outside</text>
+<text x="18" y="190" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">order_to_release                     10          1.6%     outside</text>
+<text x="18" y="208" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">------------------------------------------------------------------</text>
+<text x="18" y="226" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">total late                          637        100.0%</text>
+<text x="18" y="244" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">of which upstream                               72.7%</text>
+<text x="18" y="262" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve"></text>
+<text x="18" y="280" font-family="monospace" font-size="12.5" fill="#ffd479" xml:space="preserve">VERDICT: scorecard_misses_most_lateness</text>
+<text x="18" y="298" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">  - 72.7% of late deliveries were caused by a stage that ends before ship confirm, which is where a carrier scorecard starts counting</text>
+<text x="18" y="316" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">  - 463 of 637 late deliveries arrived with the carrier inside its committed window, so the scorecard records them as a carrier success</text>
+<text x="18" y="334" font-family="monospace" font-size="12.5" fill="#e6edf3" xml:space="preserve">  - of the 192 shipments the scorecard does flag, 91% were genuinely the carrier</text>
+<text x="18" y="352" font-family="monospace" font-size="12.5" fill="#ffd479" xml:space="preserve">  ! the scorecard is accurate about what it flags and blind to most of the problem, which is the harder failure to notice: a metric that is rarely wrong reads as trustworthy</text>
+<text x="18" y="370" font-family="monospace" font-size="12.5" fill="#ffd479" xml:space="preserve">  ! 61% of late deliveries had more than one stage over plan, so which single stage is named depends on the convention and not on the data; this run used 'largest_cause'</text>
+</svg>

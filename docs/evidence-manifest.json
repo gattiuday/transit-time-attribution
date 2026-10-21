@@ -1,0 +1,19 @@
+{
+  "captures": [
+    {
+      "name": "attribute",
+      "command": "python -m tta.cli attribute --log data/fixtures/event-log.csv",
+      "exit_code": 1,
+      "output_lines": 18,
+      "svg": "docs/img/console-attribute.svg"
+    },
+    {
+      "name": "resolution",
+      "command": "python -m tta.cli resolution --log data/fixtures/event-log.csv",
+      "exit_code": 0,
+      "output_lines": 8,
+      "svg": "docs/img/console-resolution.svg"
+    }
+  ],
+  "note": "each SVG is the verbatim stdout of the command named in it, rendered by this script. No duration is recorded: a wall clock reading is a fact about the machine, and a committed file whose contents change on every run makes a drift gate meaningless."
+}

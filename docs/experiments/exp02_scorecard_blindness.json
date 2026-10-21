@@ -1,0 +1,44 @@
+{
+  "measures": {
+    "late with more than one stage over plan": {
+      "max": 0.6515028432168968,
+      "mean": 0.6278178423883142,
+      "min": 0.6141855027279813,
+      "sd": 0.01116336402570234
+    },
+    "late with the carrier inside its window": {
+      "max": 0.7343260188087775,
+      "mean": 0.7189221219990052,
+      "min": 0.7060221870047544,
+      "sd": 0.009622659333522732
+    },
+    "scorecard precision, of what it flags": {
+      "max": 0.9522546419098143,
+      "mean": 0.9258148678818304,
+      "min": 0.9004854368932039,
+      "sd": 0.015346451114740579
+    },
+    "scorecard recall, of all late deliveries": {
+      "max": 0.29397781299524567,
+      "mean": 0.2810778780009949,
+      "min": 0.2656739811912226,
+      "sd": 0.009622659333522727
+    },
+    "upstream share of late deliveries": {
+      "max": 0.7343260188087775,
+      "mean": 0.7189221219990052,
+      "min": 0.7060221870047544,
+      "sd": 0.009622659333522732
+    }
+  },
+  "note": "the upstream share is identical under every convention, because both upstream stages lie outside the scorecard's window and which of them is named cannot change how much it misses. Precision and recall are the pair that matters: the scorecard is right about what it flags and flags a minority of what went wrong",
+  "question": "how much of the lateness can a carrier scorecard not see",
+  "replications": 12,
+  "shipments_per_log": 4000,
+  "upstream_share_by_convention": {
+    "first_cause": 0.7244340359094458,
+    "largest_cause": 0.7244340359094458,
+    "proportional": 0.7244340359094458
+  },
+  "upstream_share_convention_spread": 0.0
+}
