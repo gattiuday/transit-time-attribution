@@ -135,7 +135,15 @@ def _corrupt(root: Path, value: str, replacement: str) -> bool:
             # check validates by prefix and therefore accepted, so the test
             # passed without the checker having rejected anything. The badges
             # have their own dedicated tests below.
-            visible = check_numbers.strip_non_prose(candidate)
+            # The same reduction the checker applies to this document. For a
+            # source file that means docstrings only, and an earlier version
+            # omitted it: a corruption landed in a module level constant in
+            # `classify.py`, which the checker never reads, and the test then
+            # expected a failure the checker had no way to produce.
+            reduced = (
+                check_numbers.docstrings_only(candidate) if name.endswith(".py") else candidate
+            )
+            visible = check_numbers.strip_non_prose(reduced)
             if replacement in visible:
                 path.write_text(candidate)
                 return True

@@ -55,6 +55,12 @@ INLINE_CODE = re.compile(r"`[^`\n]*`")
 #: "sigma_D^2" is read as a published figure.
 INDENTED_CODE = re.compile(r"(?m)^(?: {4}|\t).*$")
 HTML_ATTRIBUTE = re.compile(r'\w+="[^"]*"')
+#: Percent encoding in a URL. `%20` is a space and `%7C` is a pipe, and both
+#: carry digits that a scanner reads as figures. A repository in this series
+#: publishes twenty items, and the `%20` in its python badge therefore matched
+#: that metric, so the badge could be edited into another published figure with
+#: the build green. Encoding is not content.
+PERCENT_ENCODING = re.compile(r"%[0-9A-Fa-f]{2}")
 MARKDOWN_TARGET = re.compile(r"\]\([^)]*\)")
 #: A clock time. "16:05" is two numbers to a digit scanner and one time to a
 #: reader, and neither of its halves is a measurement. Stripped before anything
@@ -143,6 +149,7 @@ def docstrings_only(text: str) -> str:
 def strip_non_prose(text: str) -> str:
     """Remove the parts of a document that may legitimately contain invented numbers."""
     text = COMMAND_FENCE.sub(" ", text)
+    text = PERCENT_ENCODING.sub(" ", text)
     text = CLOCK_TIME.sub(" ", text)
     text = BOLD.sub("", text)
     text = INDENTED_CODE.sub(" ", text)
