@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+
+      - name: Lint
+        run: |
+          ruff check src tests experiments tools
+          ruff format --check src tests experiments tools
+
+      # Its own step, deliberately. A red test surfacing as a CalledProcessError
+      # traceback out of the metrics collector costs an hour to attribute.
+      - name: Tests
+        run: |
+          python -m pytest tests/ -q \
+            --junitxml=junit.xml \
+            --cov=tta --cov-report=json --cov-report=xml --cov-report=term
+
+      - name: Coverage floor
+        run: |
+          python - <<'PY'
+          import json, sys
+          covered = json.load(open("coverage.json"))["totals"]["percent_covered"]
+          floor = 95.0
+          print(f"line coverage {covered:.2f}%, floor {floor}%")
+          sys.exit(0 if covered >= floor else 1)
+          PY
+
+      - name: Experiments
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/experiments:${{ github.workspace }}/tests
+        run: |
+          for experiment in experiments/exp*.py; do
+            echo "== $experiment"
+            python "$experiment"
+          done
+
+      - name: Receipts
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/experiments:${{ github.workspace }}/tests
+        run: |
+          python tools/collect_metrics.py --skip-tests --skip-experiments
+          python tools/check_numbers.py --summary receipts-summary.md
+
+      # The collection above overwrites docs/metrics.json and the generated
+      # blocks before anything reads them, so without this gate a committed
+      # metrics file can disagree with the run it claims to come from and CI
+      # will still pass: it would be checking the fresh copy and reporting on
+      # the stale one. The same argument as the console evidence gate below.
+      - name: The committed receipts match the run
+        run: git diff --exit-code docs/metrics.json docs/generated
+
+      - name: Publish the awkward table
+        if: always()
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          {
+            echo "## Where the lateness came from"
+            echo
+            echo '```'
+            python -m tta.cli attribute --log data/fixtures/event-log.csv || true
+            echo '```'
+            echo
+            echo "## What the sample and the clock can support"
+            echo
+            echo '```'
+            python -m tta.cli resolution --log data/fixtures/event-log.csv || true
+            echo '```'
+            if [ -f receipts-summary.md ]; then cat receipts-summary.md; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload experiment output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: experiments-py${{ matrix.python-version }}
+          path: |
+            docs/experiments/*.json
+            docs/metrics.json
+            junit.xml
+          if-no-files-found: error
+
+  committed-artifacts:
+    name: Diagram and evidence are current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install -e .
+      - name: Re-render the diagram and check for drift
+        run: |
+          python tools/render_diagram.py
+          git diff --exit-code docs/img/architecture.svg
+      # The console SVGs are published evidence. Without this gate they can go
+      # stale silently while the numbers they show move, which an audit found.
+      - name: Re-capture the console evidence and check for drift
+        run: |
+          python tools/capture_evidence.py
+          git diff --exit-code docs/img/console-attribute.svg docs/img/console-resolution.svg
+      - name: Regenerate the fixture and check it is byte identical
+        run: |
+          python -m tta.cli generate \
+            --out data/fixtures/event-log.csv \
+            --truth data/fixtures/planted-causes.csv
+          git diff --exit-code data/fixtures/
