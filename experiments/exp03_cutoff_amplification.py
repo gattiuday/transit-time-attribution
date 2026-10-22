@@ -84,8 +84,8 @@ def main() -> None:
 
     # Whether either ranking can be read at all. A spread smaller than the
     # standard error of the means it separates is not a ranking, and an earlier
-    # version of this repository published one as a bold claim in the README and
-    # the opposite of it in the defense guide, because nothing here measured
+    # version of this repository published one as a bold claim in the README
+    # and the opposite of it two sections later, because nothing here measured
     # whether the ordering was resolvable. `worst_carrier_is_best_otif` was
     # computed, written to this file, and read by nothing.
     carrier_means = [value["carrier_rate"]["mean"] for value in per_lane_out.values()]

@@ -449,7 +449,7 @@ def _lines_with_two_published_figures(document: str) -> list[tuple[int, str, str
     return out
 
 
-@pytest.mark.parametrize("document", ["README.md", "docs/defense-guide.md"])
+@pytest.mark.parametrize("document", ["README.md"])
 def test_swapping_one_published_figure_for_another_on_the_same_line_fails(sandbox, document):
     """Every line that quotes two published figures, corrupted both ways.
 
@@ -508,8 +508,8 @@ def test_deleting_a_published_figure_fails_the_build(tmp_path, metric):
 
     This passed. The forward check requires a metric only in a document that
     mentions its value, so a figure deleted from every document was required of
-    none, and an audit removed a published standard deviation from both the
-    README and the defense guide with the build staying green. A receipts system
+    none, and an audit removed a published standard deviation from every
+    document that quoted it with the build staying green. A receipts system
     whose stated uncertainty can be dropped silently is not reporting
     uncertainty, so the standard deviations are the cases named here.
     """

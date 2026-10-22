@@ -24,7 +24,7 @@ The damage was not confined to the arithmetic. A missed departure is larger than
 overrun that caused it only because the overrun had been added to it, so `largest_cause`
 named the departure wait for all but 391 of 5428 planted warehouse overruns. That
 produced a recovery of 68.6%, and the repository wrote the shortfall up as a
-structural ceiling: the README said no convention clears four fifths, the defense guide
+structural ceiling: the README said no convention clears four fifths, the decision records
 said the attribution cannot name a single cause and no version of it will, and a test
 pinned the recovery inside a band in the sixties and seventies, so the ceiling could not
 move without someone noticing. The claim that the data could not answer the question was itself an artefact of

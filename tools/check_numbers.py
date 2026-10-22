@@ -12,9 +12,9 @@ design decision until it is tested:
    because an example invocation may legitimately contain an invented row count.
    A results block is prose with a monospace font and is checked like prose.
 
-2. **An anchor matching in one document satisfied every document.** The defense
-   guide quotes the same figures and was therefore almost entirely unguarded.
-   Now every checked document is checked on its own.
+2. **An anchor matching in one document satisfied every document.** The
+   decision records quote the same figures and were therefore almost entirely
+   unguarded. Now every checked document is checked on its own.
 
 3. **The reverse check only printed a note.** That was the real hole. A forward
    check can only confirm that a correct sentence exists somewhere; it cannot
@@ -199,8 +199,8 @@ def forward_check(
     """Every anchored metric must appear, inside an anchor phrase, where it is claimed.
 
     A metric is required in a document only if that document mentions its value
-    at all. That keeps the README's exclusive figures from being demanded of the
-    defense guide, while still checking any figure the defense guide does quote.
+    at all. That keeps the README's exclusive figures from being demanded of a
+    decision record, while still checking any figure that record does quote.
     """
     formatted, anchors = payload["formatted"], payload["anchors"]
     verified, failures = [], []

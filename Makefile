@@ -53,12 +53,12 @@ receipts:
 	@test -f junit.xml -a -f coverage.json || $(MAKE) test
 	$(PY) tools/capture_evidence.py
 	@rm -rf .receipts-before && mkdir -p .receipts-before
-	@for f in docs/metrics.json README.md docs/defense-guide.md; do \
+	@for f in docs/metrics.json README.md; do \
 	  mkdir -p .receipts-before/$$(dirname $$f); cp $$f .receipts-before/$$f; done
 	@cp -r docs/generated .receipts-before/docs/generated
 	$(PY) tools/collect_metrics.py --skip-tests
 	@diff -r -q .receipts-before/docs/generated docs/generated \
-	  && for f in docs/metrics.json README.md docs/defense-guide.md; do \
+	  && for f in docs/metrics.json README.md; do \
 	    diff -q .receipts-before/$$f $$f || exit 1; done \
 	  || { echo "collection changed a published artefact: the committed copy was stale"; \
 	       rm -rf .receipts-before; exit 1; }

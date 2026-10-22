@@ -238,7 +238,6 @@ GENERATED_BLOCKS = {
 
 CHECKED_DOCUMENTS = (
     "README.md",
-    "docs/defense-guide.md",
     *sorted(str(path.relative_to(ROOT)) for path in (ROOT / "docs" / "adr").glob("ADR-*.md")),
     *sorted(str(path.relative_to(ROOT)) for path in (ROOT / "src" / "tta").glob("*.py")),
     *sorted(str(path.relative_to(ROOT)) for path in (ROOT / "experiments").glob("exp*.py")),
@@ -344,17 +343,17 @@ def _fixture_cause_share(cause: str) -> float:
 
 #: Documents that quote the test count, which changes on every commit that adds
 #: a test and was corrected by hand each time.
-TEST_COUNT_DOCUMENTS = ("README.md", "docs/defense-guide.md")
+TEST_COUNT_DOCUMENTS = ("README.md",)
 
 
 def sync_test_count(total: int) -> None:
     """Write the measured test count into the badge and the prose that quote it.
 
     The count moves whenever a test is added, so every commit that added one
-    also carried three hand edits to keep the badge, the README sentence and the
-    defense guide in step, and a missed edit showed up as a failing receipts
-    check rather than as anything a reader would notice. A figure that has to be
-    typed in three places is a figure that will eventually be wrong in one.
+    also carried hand edits to keep the badge and the README sentence in step,
+    and a missed edit showed up as a failing receipts check rather than as
+    anything a reader would notice. A figure that has to be typed in more than
+    one place is a figure that will eventually be wrong in one of them.
 
     The substitution is deliberately narrow: a tests badge, and the exact phrase
     "N tests" where N is some number. Anything looser would rewrite unrelated

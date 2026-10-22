@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml/badge.svg)](https://github.com/GITHUB_USERNAME/transit-time-attribution/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)
-![Tests](https://img.shields.io/badge/tests-234-brightgreen)
+![Tests](https://img.shields.io/badge/tests-233-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-100.00%25-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -68,7 +68,7 @@ Measured across twelve independent event logs of 4,000 shipments each:
   logs. The floor alone used to be the whole answer here and it is the narrower half of it:
   see ADR-005.
 
-234 tests, 100.00% line coverage, and every figure above is re-measured by CI and checked
+233 tests, 100.00% line coverage, and every figure above is re-measured by CI and checked
 against this document in both directions on every push. The coverage figure is published to
 two decimals because it used to be rounded to none, and a measurement a fifth of a point
 short of a hundred formatted as a round hundred while the badge check compared the badge
@@ -358,7 +358,7 @@ the class, which in Python is the same sentence twice.
 
 `tools/check_numbers.py` works in both directions. Forward, every anchored figure must
 appear inside its **anchor phrase** rather than as a bare digit. Reverse, any number in
-this README, the defense guide, the ADRs or a source docstring that no anchor phrase
+this README, the ADRs or a source docstring that no anchor phrase
 claims **fails the build**, which is what catches a figure corrupted into another measured
 figure's value. The four tables above are generated and checked by block equality, since
 their cells cannot be guarded by phrases.
@@ -379,7 +379,7 @@ too.
 | Python 3.11+ | everything | `itertools.pairwise` is how the timestamp ordering check reads as the invariant it is rather than as index arithmetic |
 | numpy | the generator and the replication statistics | the cause mix is a weighted draw over thousands of shipments, which is one call and a loop otherwise |
 | pandas | reading and writing event logs | a CSV with a header is what a transport team can actually export from a TMS |
-| pytest | 234 tests | parametrising over three conventions and four clock granularities is how the convention findings are pinned without a copy of each test |
+| pytest | 233 tests | parametrising over three conventions and four clock granularities is how the convention findings are pinned without a copy of each test |
 | ruff | lint and format | one tool, so a contributor cannot pass lint and fail format |
 | GitHub Actions | re-measurement | the numbers in this README are only trustworthy if something recomputes them without being asked |
 

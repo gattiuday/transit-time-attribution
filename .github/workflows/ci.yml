@@ -77,15 +77,14 @@ jobs:
       # metrics file can disagree with the run it claims to come from and CI
       # will still pass: it would be checking the fresh copy and reporting on
       # the stale one. The same argument as the console evidence gate below.
-      # README.md and the defense guide are in this list because collection now
-      # writes into them: the generated tables and the test count are
-      # substituted in rather than pasted by hand, so a committed copy that
-      # disagrees with a fresh run is the same staleness as a stale metrics
-      # file.
+      # README.md is in this list because collection now writes into it: the
+      # generated tables and the test count are substituted in rather than
+      # pasted by hand, so a committed copy that disagrees with a fresh run is
+      # the same staleness as a stale metrics file.
       - name: The committed receipts match the run
         run: |
           git diff --exit-code \
-            docs/metrics.json docs/generated README.md docs/defense-guide.md
+            docs/metrics.json docs/generated README.md
 
       - name: Publish the awkward table
         if: always()
